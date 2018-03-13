@@ -1,0 +1,41 @@
+{
+  "name": "easysteem",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/easysteem.js",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production webpack --config webpack.config.js --progress --hide-modules",
+    "build:dev": "cross-env NODE_ENV=test webpack --config webpack.config.js --progress --hide-modules",
+    "watch": "npm run build -- --watch",
+    "watch:dev": "npm run build:dev -- --watch",
+    "lint": "eslint src/**/*.js",
+    "lint:fix": "eslint src/**/*.js  --fix",
+    "lint:init": "eslint --init"
+  },
+  "keywords": [],
+  "author": "harpagon210 <harpagon210@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "copy-webpack-plugin": "^4.4.1",
+    "eslint": "^4.17.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-loader": "^1.9.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "cross-env": "^5.0.1",
+    "webpack": "^3.11.0"
+  },
+  "dependencies": {
+    "bs58": "^4.0.1",
+    "sc2-sdk": "^1.0.2",
+    "secure-random": "^1.1.1",
+    "speakingurl": "^14.0.1",
+    "steem": "^0.7.1"
+  }
+}
