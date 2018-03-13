@@ -1,0 +1,19 @@
+{
+	"plugins": ["plugins/markdown"],
+	"markdown": {
+		"parser": "gfm",
+		"hardwrap": true
+	},
+	"templates": {
+		"name": "EasySteem",
+		"footerText": "Copyright (c) 2018 harpagon210",
+		"logo": {
+		  "link": "https://harpagon210.github.io/easysteem"
+		}
+	},
+	"opts": {
+	  "encoding": "utf8",
+	  "recurse": true,
+	  "package": "package.json"
+	}
+  }

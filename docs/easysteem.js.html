@@ -1,4 +1,56 @@
-import steem from 'steem'
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Source: easysteem.js | EasySteem</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-jsdoc.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/tui-doc.css">
+
+    
+</head>
+<body>
+<nav class="lnb" id="lnb">
+    <div class="logo" style="">
+        
+            <a href="https://harpagon210.github.io/easysteem" rel="noopener noreferrer" target="_blank">
+                <img src="img/toast-ui.png" width="100%" height="100%">
+            </a>
+        
+    </div>
+    <div class="title">
+        <h1><a href="index.html" class="link">EasySteem</a></h1>
+        
+            <span class="version">v1.0.0</span>
+        
+    </div>
+    <div class="search-container" id="search-container">
+        <input type="text" placeholder="Search">
+        <ul></ul>
+    </div>
+    
+    <div class="lnb-api hidden"><h3>Classes</h3><ul><li><a href="EasySteem.html">EasySteem</a><button type="button" class="hidden toggle-subnav btn btn-link">  <span class="glyphicon glyphicon-plus"></span></button><div class="hidden" id="EasySteem_sub"><div class="member-type">Members</div><ul class="inner"><li><a href="EasySteem.html#.REWARD_OPTIONS">REWARD_OPTIONS</a></li></ul><div class="member-type">Methods</div><ul class="inner"><li><a href="EasySteem.html#calculateEstimatedAccountValue">calculateEstimatedAccountValue</a></li><li><a href="EasySteem.html#calculatePayout">calculatePayout</a></li><li><a href="EasySteem.html#calculateTotalDelegatedSP">calculateTotalDelegatedSP</a></li><li><a href="EasySteem.html#calculateVoteValue">calculateVoteValue</a></li><li><a href="EasySteem.html#calculateVotingPower">calculateVotingPower</a></li><li><a href="EasySteem.html#checkPermLinkLength">checkPermLinkLength</a></li><li><a href="EasySteem.html#createComment">createComment</a></li><li><a href="EasySteem.html#createPermlink">createPermlink</a></li><li><a href="EasySteem.html#createPost">createPost</a></li><li><a href="EasySteem.html#deletePostOrComment">deletePostOrComment</a></li><li><a href="EasySteem.html#downvote">downvote</a></li><li><a href="EasySteem.html#follow">follow</a></li><li><a href="EasySteem.html#getActiveVotes">getActiveVotes</a></li><li><a href="EasySteem.html#getContent">getContent</a></li><li><a href="EasySteem.html#getContentReplies">getContentReplies</a></li><li><a href="EasySteem.html#getFollowers">getFollowers</a></li><li><a href="EasySteem.html#getFollowing">getFollowing</a></li><li><a href="EasySteem.html#getLoginUrl">getLoginUrl</a></li><li><a href="EasySteem.html#getUserAccount">getUserAccount</a></li><li><a href="EasySteem.html#getUserAccounts">getUserAccounts</a></li><li><a href="EasySteem.html#ignore">ignore</a></li><li><a href="EasySteem.html#logout">logout</a></li><li><a href="EasySteem.html#me">me</a></li><li><a href="EasySteem.html#parsePayoutAmount">parsePayoutAmount</a></li><li><a href="EasySteem.html#parseReturnedUrl">parseReturnedUrl</a></li><li><a href="EasySteem.html#postOperation">postOperation</a></li><li><a href="EasySteem.html#reblog">reblog</a></li><li><a href="EasySteem.html#setAccessToken">setAccessToken</a></li><li><a href="EasySteem.html#setAccount">setAccount</a></li><li><a href="EasySteem.html#unfollow">unfollow</a></li><li><a href="EasySteem.html#updateComment">updateComment</a></li><li><a href="EasySteem.html#updatePost">updatePost</a></li><li><a href="EasySteem.html#updateUserMetadata">updateUserMetadata</a></li><li><a href="EasySteem.html#upvote">upvote</a></li><li><a href="EasySteem.html#vestToSteem">vestToSteem</a></li></ul></div></li></ul></div>
+</nav>
+<div id="resizer"></div>
+
+<div class="main" id="main">
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import steem from 'steem'
 import sc2 from 'sc2-sdk'
 import base58 from 'bs58'
 import getSlug from 'speakingurl'
@@ -6,7 +58,7 @@ import secureRandom from 'secure-random'
 // babel-polyfill required for the async/wait
 import 'babel-polyfill' // eslint-disable-line no-unused-vars
 
-module.exports = class EasySteem {
+class EasySteem {
   /**
    * initialize easysteem
    * @constructor
@@ -37,7 +89,7 @@ module.exports = class EasySteem {
 
   /**
    * get the url where the user can log into steemconnect
-   * @param {Array<String>} scope scope of your application (https://github.com/steemit/steemconnect/wiki/OAuth-2#scopes)
+   * @param {Array&lt;String>} scope scope of your application (https://github.com/steemit/steemconnect/wiki/OAuth-2#scopes)
    * @param {String} callbackUrl url where the users will be redirected after interacting with steemconnect
    * @param {String} state data that will be passed to the callbackURL after the user has logged in
    * @returns {String} url to log the user in
@@ -50,7 +102,7 @@ module.exports = class EasySteem {
 
   /**
    * log the current user out
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    */
   logout () {
     return this.steemconnectapi.revokeToken()
@@ -58,7 +110,7 @@ module.exports = class EasySteem {
 
   /**
    * get the profile of the current user
-   * @returns {Promise<JSON>} return the user profile
+   * @returns {Promise&lt;JSON>} return the user profile
   */
   me () {
     return this.steemconnectapi.me()
@@ -68,11 +120,11 @@ module.exports = class EasySteem {
    * parse a url returned by Steemconnect to get the account, the access token and the expiration time
    * @param {String} url url to parse
    * @example
-   * easysteem.parseReturnedUrl('https://my-awesome-website.com/steemconnect/?access_token=THISISASECUREDTOKEN&expires_in=604800&username=harpagon)
+   * easysteem.parseReturnedUrl('https://my-awesome-website.com/steemconnect/?access_token=THISISASECUREDTOKEN&amp;expires_in=604800&amp;username=harpagon)
    * @returns {JSON} account, accessToken and expTime
    */
   parseReturnedUrl (url) {
-    let urlSplitted = url.split('?')[1].split('&')
+    let urlSplitted = url.split('?')[1].split('&amp;')
 
     let accessToken = urlSplitted.filter((el) => {
       if (el.match('access_token') !== null) {
@@ -121,7 +173,7 @@ module.exports = class EasySteem {
   /**
    * update the current user metadata
    * @param {JSON} metadata
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope custom_json
    */
   updateUserMetadata (metadata) {
@@ -133,7 +185,7 @@ module.exports = class EasySteem {
    * @param {String} postAuthor the username of the author of the post
    * @param {String} postPermlink the permlink of the post
    * @param {Number} weigth the weight of the vote (ex: 0, 1.24, 49.9, 100)
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope vote
    * @example
    * easysteem.upvote('harpagon', 'test-permlink', 49.99)
@@ -149,7 +201,7 @@ module.exports = class EasySteem {
    * @param {String} postAuthor the username of the author of the post
    * @param {String} postPermlink the permlink of the post
    * @param {Number} weigth the weight of the vote (ex: 0, 1.24, 49.9, 100)
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope vote
    * @example
    * easysteem.downvote('harpagon', 'test-permlink', 49.99)
@@ -165,20 +217,20 @@ module.exports = class EasySteem {
    * @param {String} title title of the post
    * @param {String} body markdown formatted body
    * @param {String} category category of the post
-   * @param {Array<String>} tags tags of the post
+   * @param {Array&lt;String>} tags tags of the post
    * @param {String} rewardOption default is REWARD_OPTIONS.FIFTY_PERCENT_SP_SBD (REWARD_OPTIONS.CENT_PERCENT_SP, REWARD_OPTIONS.FIFTY_PERCENT_SP_SBD or REWARD_OPTIONS.NONE
-   * @param {Array<JSON>} beneficiaries array containing the beneficiaries and the weight for their reward ex: [{ 'account': 'harpagon', 'weight': 100 }]
+   * @param {Array&lt;JSON>} beneficiaries array containing the beneficiaries and the weight for their reward ex: [{ 'account': 'harpagon', 'weight': 100 }]
    * @param {JSON} jsonMetadata metadata attached to this post
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope comment, comment_options
    * @example
    * easysteem.createPost(
-   *  'title',
-   *  'body',
-   *  'category',
-   *  ['tag1', 'tag2'],
+   *  'title', 
+   *  'body', 
+   *  'category', 
+   *  ['tag1', 'tag2'], 
    *  EasySteem.REWARD_OPTIONS.CENT_PERCENT_SP, // default is set to REWARD_OPTIONS.FIFTY_PERCENT_SP_SBD
-   *  [
+   *  [ 
    *    {
    *      'account': 'harpagon',
    *      'weight': 50.99 // represents the percentage (50.99% in this case)
@@ -187,10 +239,10 @@ module.exports = class EasySteem {
    *      'account': 'account',
    *      'weight': 0.01 // represents the percentage (0.01% in this case)
    *    }
-   *  ],
+   *  ], 
    *  {
    *    'format': 'html' // default is set to mardown but you can override
-   *  })
+   *  }) 
    *   .then(result => console.log(result))
    *   .catch(error => console.error(error.error, error.error_description))
    */
@@ -212,20 +264,20 @@ module.exports = class EasySteem {
    * @param {String} permlink permlink of the post to update
    * @param {String} title title of the post
    * @param {String} body markdown formatted body
-   * @param {Array<String>} tags tags of the post
+   * @param {Array&lt;String>} tags tags of the post
    * @param {JSON} jsonMetadata metadata attached to this post
    * @param {String} category will be used to update the post, if not provided, it will be retrieved via the Steem API (however the category can't be updated)
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope comment and comment_options
    * @example
    * easysteem.updatePost(
-   *  'permlink',
-   *  'title',
-   *  'body',
-   *  ['tag1', 'tag2'],
+   *  'permlink', 
+   *  'title', 
+   *  'body', 
+   *  ['tag1', 'tag2'], 
    *  {
    *    'format': 'html' // default is set to mardown but you can override
-   *  },
+   *  }, 
    *  'category')
    *    .then(result => console.log(result))
    *    .catch(error => console.error(error.error, error.error_description))
@@ -255,7 +307,7 @@ module.exports = class EasySteem {
    * @param {String} parentAuthor author of the post or comment to comment
    * @param {String} parentPermlink permlink of the post or comment to comment
    * @param {String} body markdown formatted body
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope comment and comment_options
    * @example
    * easysteem.createComment('harpagon', 'test-title', '**test comment**')
@@ -280,7 +332,7 @@ module.exports = class EasySteem {
    * @param {String} body markdiwn formatted body
    * @param {String} parentAuthor parent author of the post or comment to comment (if not provided, this will be retrieved via the Steem API)
    * @param {String} parentPermlink parent permlink of the post or comment to comment (if not provided, this will be retrieved via the Steem API)
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope comment and comment_options
    * @example
    * easysteem.updateComment('re-harpagon-test-title-20180312t034345437z', '**test update comment 3**')
@@ -288,7 +340,7 @@ module.exports = class EasySteem {
    *  .catch(error => console.error(error.error, error.error_description))
    */
   updateComment (permlink, body, parentAuthor = null, parentPermlink = null) {
-    if (parentAuthor && parentPermlink) {
+    if (parentAuthor &amp;&amp; parentPermlink) {
       return this.postOperation(parentAuthor, parentPermlink, permlink, '', body)
     } else {
       return new Promise(async (resolve, reject) => {
@@ -310,7 +362,7 @@ module.exports = class EasySteem {
   /**
    * delete a post or a comment
    * @param {String} permlink permlink of the post or comment to delete
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope delete_comment
    */
   deletePostOrComment (permlink) {
@@ -334,11 +386,11 @@ module.exports = class EasySteem {
    * @param {String} parentPermlink parent permlink of the post or comment
    * @param {String} title title of the post (empty for a comment)
    * @param {String} body markdown formatted body
-   * @param {Array<String>} tags tags of the post
+   * @param {Array&lt;String>} tags tags of the post
    * @param {String} rewardOption REWARD_OPTIONS.CENT_PERCENT_SP, REWARD_OPTIONS.FIFTY_PERCENT_SP_SBD or REWARD_OPTIONS.NONE
-   * @param {Array<JSON>} beneficiaries array containing the beneficiaries and the weight for their reward
+   * @param {Array&lt;JSON>} beneficiaries array containing the beneficiaries and the weight for their reward
    * @param {JSON} jsonMetadata metadata attached to this post
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    */
   postOperation (parentAuthor, parentPermlink, permlink, title, body, tags = [], rewardOption = null, beneficiaries = [], jsonMetadata = {}) {
     const operations = []
@@ -375,9 +427,9 @@ module.exports = class EasySteem {
       'percent_steem_dollars': 10000
     }
 
-    if (rewardOption && (rewardOption === EasySteem.REWARD_OPTIONS.NONE)) {
+    if (rewardOption &amp;&amp; (rewardOption === EasySteem.REWARD_OPTIONS.NONE)) {
       commentOptionsConfig.max_accepted_payout = '0.000 SBD'
-    } else if (rewardOption && (rewardOption === EasySteem.CENT_PERCENT_SP)) {
+    } else if (rewardOption &amp;&amp; (rewardOption === EasySteem.CENT_PERCENT_SP)) {
       commentOptionsConfig.percent_steem_dollars = 0
     }
 
@@ -387,7 +439,7 @@ module.exports = class EasySteem {
         a.weight *= 100.00
         let textB = b.account.toUpperCase()
         b.weight *= 100.00
-        return (textA < textB) ? -1 : (textA > textB) ? 1 : 0
+        return (textA &lt; textB) ? -1 : (textA > textB) ? 1 : 0
       })
 
       commentOptionsConfig.extensions = [
@@ -412,7 +464,7 @@ module.exports = class EasySteem {
    * reblog a post
    * @param {String} author the author of the post to reblog
    * @param {String} permlink the permlink of the post to reblog
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope custom_json
    */
   reblog (author, permlink) {
@@ -422,7 +474,7 @@ module.exports = class EasySteem {
   /**
    * follow an author
    * @param {String} author author to follow
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope custom_json
    */
   follow (author) {
@@ -432,7 +484,7 @@ module.exports = class EasySteem {
   /**
    * unfollow an author
    * @param {String} author author to unfollow
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope custom_json
    */
   unfollow (author) {
@@ -442,7 +494,7 @@ module.exports = class EasySteem {
   /**
    * ignore an author
    * @param {String} author author to ignore
-   * @returns {Promise<JSON>} return the transaction details
+   * @returns {Promise&lt;JSON>} return the transaction details
    * @steemconnect_scope custom_json
    * @
    */
@@ -454,7 +506,7 @@ module.exports = class EasySteem {
    * get the content of a post or comment
    * @param {String} account the account that owns the post or comment
    * @param {String} permlink the permlink of the post or comment
-   * @returns {Promise<JSON>} return the content of the post or comment
+   * @returns {Promise&lt;JSON>} return the content of the post or comment
    */
   getContent (account, permlink) {
     return steem.api.getContentAsync(account, permlink)
@@ -471,7 +523,7 @@ module.exports = class EasySteem {
 
   /**
    * retrieve a user account
-   * @param {Array<String>} usernames usernames for which you want to retrieve the account details
+   * @param {Array&lt;String>} usernames usernames for which you want to retrieve the account details
    * @returns {JSON} user account details
    */
   getUserAccounts (usernames) {
@@ -481,7 +533,7 @@ module.exports = class EasySteem {
   /**
    * get the followers of a user
    * @param {String} username the username for which you want to retrieve the followers
-   * @returns {Array<JSON>} an array containing the followers
+   * @returns {Array&lt;JSON>} an array containing the followers
    */
   getFollowers (username) {
     return new Promise(async resolve => {
@@ -489,7 +541,7 @@ module.exports = class EasySteem {
       let startFollower = ''
       const followCount = await this.steem.api.getFollowCountAsync(username)
       const count = followCount.follower_count
-      for (let i = 0; i < count; i += 1000) {
+      for (let i = 0; i &lt; count; i += 1000) {
         let temp = await this.steem.api.getFollowersAsync(username, startFollower, 'blog', 1000)
         Array.prototype.push.apply(retVal, temp)
         startFollower = retVal[retVal.length - 1].follower
@@ -501,7 +553,7 @@ module.exports = class EasySteem {
   /**
    * get the following of a user
    * @param {String} username the username for which you want to retrieve the following
-   * @returns {Array<JSON>} an array containing the following
+   * @returns {Array&lt;JSON>} an array containing the following
    */
   getFollowing (username) {
     return new Promise(async resolve => {
@@ -509,7 +561,7 @@ module.exports = class EasySteem {
       let startFollower = ''
       const followCount = await this.steem.api.getFollowCountAsync(username)
       const count = followCount.following_count
-      for (let i = 0; i < count; i += 1000) {
+      for (let i = 0; i &lt; count; i += 1000) {
         let temp = await this.steem.api.getFollowingAsync(username, startFollower, 'blog', 100)
         Array.prototype.push.apply(retVal, temp)
         startFollower = retVal[retVal.length - 1].follower
@@ -566,7 +618,7 @@ module.exports = class EasySteem {
     const isComment = parentAuthor !== ''
 
     let payout = pendingPayout + totalAuthorPayout + totalCuratorPayout
-    if (payout < 0.0) payout = 0.0
+    if (payout &lt; 0.0) payout = 0.0
     if (payout > maxPayout) payout = maxPayout
     payoutDetails.payoutLimitHit = payout >= maxPayout
 
@@ -574,7 +626,7 @@ module.exports = class EasySteem {
     // there is a valid cashout_time AND it's NOT a comment with 0 votes.
     const cashoutActive =
     pendingPayout > 0 ||
-      (cashoutTime.indexOf('1969') !== 0 && !(isComment && activeVotes.length === 0))
+      (cashoutTime.indexOf('1969') !== 0 &amp;&amp; !(isComment &amp;&amp; activeVotes.length === 0))
 
     if (cashoutActive) {
       payoutDetails.potentialPayout = pendingPayout
@@ -591,7 +643,7 @@ module.exports = class EasySteem {
 
     if (maxPayout === 0) {
       payoutDetails.isPayoutDeclined = true
-    } else if (maxPayout < 1000000) {
+    } else if (maxPayout &lt; 1000000) {
       payoutDetails.maxAcceptedPayout = maxPayout
     }
 
@@ -620,7 +672,7 @@ module.exports = class EasySteem {
   }
 
   slug (text) {
-    return getSlug(text.replace(/[<>]/g, ''), { truncate: 128 })
+    return getSlug(text.replace(/[&lt;>]/g, ''), { truncate: 128 })
   }
   /**
    * create a permlink
@@ -632,7 +684,7 @@ module.exports = class EasySteem {
    */
   createPermlink (title, parentAuthor = null, parentPermlink = null) {
     let permlink
-    if (title && title.trim() !== '') {
+    if (title &amp;&amp; title.trim() !== '') {
       let s = this.slug(title)
       if (s === '') {
         s = base58.encode(secureRandom.randomBuffer(4))
@@ -750,3 +802,33 @@ module.exports = class EasySteem {
     )
   }
 }
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<footer>
+    <img class="logo" src="img/toast-ui.png" style="">
+    <div class="footer-text">Copyright (c) 2018 harpagon210</div>
+</footer>
+<script>prettyPrint();</script>
+<script src="scripts/jquery.min.js"></script>
+<script src="scripts/tui-doc.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+    <script>
+        var id = '_sub'.replace(/"/g, '_');
+        var selectedApi = document.getElementById(id); // do not use jquery selector
+        var $selectedApi = $(selectedApi);
+
+        $selectedApi.removeClass('hidden');
+        $selectedApi.parent().find('.glyphicon').removeClass('glyphicon-plus').addClass('glyphicon-minus');
+        showLnbApi();
+    </script>
+
+</body>
+</html>
