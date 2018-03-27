@@ -35004,7 +35004,7 @@ module.exports = function () {
       if (payout > maxPayout) payout = maxPayout;
       payoutDetails.payoutLimitHit = payout >= maxPayout;
 
-      // There is an "active cashout" if: (a) there is a pending payout, OR (b)
+      // There is an 'active cashout' if: (a) there is a pending payout, OR (b)
       // there is a valid cashout_time AND it's NOT a comment with 0 votes.
       var cashoutActive = pendingPayout > 0 || cashoutTime.indexOf('1969') !== 0 && !(isComment && activeVotes.length === 0);
 
@@ -35017,7 +35017,7 @@ module.exports = function () {
       }
 
       if (cashoutActive) {
-        // Append ".000Z" to make it ISO format (YYYY-MM-DDTHH:mm:ss.sssZ).
+        // Append '.000Z' to make it ISO format (YYYY-MM-DDTHH:mm:ss.sssZ).
         payoutDetails.cashoutInTime = cashoutTime + '.000Z';
       }
 
@@ -35103,28 +35103,99 @@ module.exports = function () {
       permlink = 're-' + parentAuthor + '-' + parentPermlink + '-' + timeStr;
       return Promise.resolve(this.checkPermLinkLength(permlink));
     }
+  }, {
+    key: 'refreshSteemProperties',
+    value: function refreshSteemProperties() {
+      var _this8 = this;
+
+      return Promise.all([this.steem.api.getRewardFundAsync('post'), this.steem.api.getDynamicGlobalPropertiesAsync(), this.getCryptoCurrencyPrice('STEEM'), this.getCryptoCurrencyPrice('SBD')]).then(function (results) {
+        _this8.steemProperties = {};
+        // set the reward balance and the recent claims
+        _this8.steemProperties.rewardBalance = _this8.parsePayoutAmount(results[0].reward_balance);
+        _this8.steemProperties.recentClaims = _this8.parsePayoutAmount(results[0].recent_claims);
+
+        // set other data
+        _this8.steemProperties.totalVestingFund = _this8.parsePayoutAmount(results[1].total_vesting_fund_steem);
+        _this8.steemProperties.totalVestingShares = _this8.parsePayoutAmount(results[1].total_vesting_shares);
+        _this8.steemProperties.maxVirtualBandwidth = parseInt(results[1].max_virtual_bandwidth, 10);
+
+        // set the rates
+        _this8.steemProperties.steemRate = results[2];
+        _this8.steemProperties.sbdRate = results[3];
+      });
+    }
 
     /**
-     * calculate the $ value of a vote
-     * @param {Number} vests
-     * @param {Number} recentClaims
-     * @param {Number} rewardBalance
-     * @param {Number} rate
-     * @param {Number} vp
-     * @param {Number} weight
-     * @link https://github.com/aaroncox/chainbb/blob/fcb09bee716e907c789a6494975093361482fb4f/services/frontend/src/components/elements/post/button/vote/options.js#L69
+     * calculate the Steem value of a user vote
+     * @param {JSON} user a user object
+     * @param {Number} voteWeight the weight of the vote to calculate
+     * @param {Number} numberDecimals default 2, number of decimals to return
+     * @param {Boolean} refreshSteemProperties default true, refresh the Steem properties (Steem rate, etc...)
+     * @returns {Number} the value of the vote in Steem
      */
 
   }, {
     key: 'calculateVoteValue',
-    value: function calculateVoteValue(vests, recentClaims, rewardBalance, rate) {
-      var vp = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 10000;
-      var weight = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 10000;
+    value: function calculateVoteValue(user) {
+      var voteWeight = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100.00;
 
-      var vestingShares = parseInt(vests * 1e6, 10);
-      var power = vp * weight / 10000 / 50;
-      var rshares = power * vestingShares / 10000;
-      return rshares / recentClaims * rewardBalance * rate;
+      var _this9 = this;
+
+      var numberDecimals = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
+      var refreshSteemProperties = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+
+      return new Promise(function () {
+        var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(resolve) {
+          var votingPower, vestingShares, power, rshares;
+          return regeneratorRuntime.wrap(function _callee7$(_context7) {
+            while (1) {
+              switch (_context7.prev = _context7.next) {
+                case 0:
+                  if (!(!_this9.steemProperties || refreshSteemProperties)) {
+                    _context7.next = 3;
+                    break;
+                  }
+
+                  _context7.next = 3;
+                  return _this9.refreshSteemProperties();
+
+                case 3:
+                  votingPower = _this9.calculateVotingPower(user, numberDecimals) * 100;
+
+                  voteWeight = voteWeight * 100;
+                  vestingShares = parseInt(_this9.calculateUserVestingShares(user) * 1e6, 10);
+                  power = votingPower * voteWeight / 10000 / 50;
+                  rshares = power * vestingShares / 10000;
+
+                  resolve((rshares / _this9.steemProperties.recentClaims * _this9.steemProperties.rewardBalance * _this9.steemProperties.steemRate).toFixed(numberDecimals));
+
+                case 9:
+                case 'end':
+                  return _context7.stop();
+              }
+            }
+          }, _callee7, _this9);
+        }));
+
+        return function (_x28) {
+          return _ref7.apply(this, arguments);
+        };
+      }());
+    }
+
+    /**
+     * calculate a user's vesting shares
+     * @param {JSON} user a user object
+     * @returns {Number} the user's vesting shares
+     */
+
+  }, {
+    key: 'calculateUserVestingShares',
+    value: function calculateUserVestingShares(user) {
+      var vestingShares = parseFloat(this.parsePayoutAmount(user.vesting_shares));
+      var receivedVestingShares = parseFloat(this.parsePayoutAmount(user.received_vesting_shares));
+      var delegatedVestingShares = parseFloat(this.parsePayoutAmount(user.delegated_vesting_shares));
+      return vestingShares + receivedVestingShares - delegatedVestingShares;
     }
 
     /**
@@ -35144,30 +35215,165 @@ module.exports = function () {
 
     /**
      * calculate the voting power of a user
-     * @param {JSON} user
+     * @param {JSON} user a user object
+     * @param {Number} numberDecimals number of decimals to return, default 2
+     * @return {Number} a number representing the voting power of the user
      */
 
   }, {
     key: 'calculateVotingPower',
     value: function calculateVotingPower(user) {
-      var secondsago = (new Date().getTime() - new Date(user.last_vote_time + 'Z').getTime()) / 1000;
-      return Math.min(10000, user.voting_power + 10000 * secondsago / 432000) / 10000;
+      var numberDecimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
+
+      var secondsago = (new Date() - new Date(user.last_vote_time + 'Z')) / 1000;
+      var vpow = user.voting_power + 10000 * secondsago / 432000;
+      return Math.min(vpow / 100, 100).toFixed(numberDecimals);
+    }
+
+    /**
+     * calculate the bandwidth information of a user
+     * @param {JSON} user a user object
+     * @param {Number} numberDecimals number of decimals to return, default 2
+     * @param {Boolean} refreshSteemProperties default true, refresh the Steem properties (Steem rate, etc...)
+     * @returns {JSON} json with the bandwidth information (used, allocated in percents and bytes)
+     */
+
+  }, {
+    key: 'calculateBandwidth',
+    value: function calculateBandwidth(user) {
+      var _this10 = this;
+
+      var numberDecimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
+      var refreshSteemProperties = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+      return new Promise(function () {
+        var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(resolve) {
+          var STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS, vestingShares, receivedVestingShares, averageBandwidth, deltaTime, bandwidthAllocated, newBandwidth;
+          return regeneratorRuntime.wrap(function _callee8$(_context8) {
+            while (1) {
+              switch (_context8.prev = _context8.next) {
+                case 0:
+                  if (!(!_this10.steemProperties || refreshSteemProperties)) {
+                    _context8.next = 3;
+                    break;
+                  }
+
+                  _context8.next = 3;
+                  return _this10.refreshSteemProperties();
+
+                case 3:
+                  STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS = 60 * 60 * 24 * 7;
+                  vestingShares = parseFloat(_this10.parsePayoutAmount(user.vesting_shares));
+                  receivedVestingShares = parseFloat(_this10.parsePayoutAmount(user.received_vesting_shares));
+                  averageBandwidth = parseInt(user.average_bandwidth, 10);
+                  deltaTime = (new Date() - new Date(user.last_bandwidth_update + 'Z')) / 1000;
+                  bandwidthAllocated = _this10.steemProperties.maxVirtualBandwidth * (vestingShares + receivedVestingShares) / _this10.steemProperties.totalVestingShares;
+
+                  bandwidthAllocated = Math.round(bandwidthAllocated / 1000000);
+
+                  newBandwidth = 0;
+
+                  if (deltaTime < STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS) {
+                    newBandwidth = (STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS - deltaTime) * averageBandwidth / STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS;
+                  }
+                  newBandwidth = Math.round(newBandwidth / 1000000);
+
+                  resolve({
+                    'percents': {
+                      'remaining': (100 - 100 * newBandwidth / bandwidthAllocated).toFixed(numberDecimals),
+                      'used': (100 * newBandwidth / bandwidthAllocated).toFixed(numberDecimals)
+                    },
+                    'bytes': {
+                      'remaining': _this10.bytesToSize(bandwidthAllocated - newBandwidth, numberDecimals),
+                      'used': _this10.bytesToSize(newBandwidth, numberDecimals),
+                      'allocated': _this10.bytesToSize(bandwidthAllocated, numberDecimals)
+                    }
+                  });
+
+                case 14:
+                case 'end':
+                  return _context8.stop();
+              }
+            }
+          }, _callee8, _this10);
+        }));
+
+        return function (_x32) {
+          return _ref8.apply(this, arguments);
+        };
+      }());
+    }
+
+    /**
+     * calculate the reputation in a more readable way
+     * @param {JSON} user a user object
+     * @param {*} numberDecimals number of decimals to return, default 2
+     */
+
+  }, {
+    key: 'calculateReputation',
+    value: function calculateReputation(user) {
+      var numberDecimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
+
+      var rawReputation = user.reputation;
+      var isNegative = rawReputation < 0;
+      var reputation = Math.log10(Math.abs(rawReputation));
+
+      reputation = Math.max(reputation - 9, 0);
+      reputation *= isNegative ? -9 : 9;
+      reputation += 25;
+
+      return reputation.toFixed(numberDecimals);
     }
 
     /**
      * calculate an estimation of an account value
-     * @param {JSON} user
-     * @param {Number} totalVestingShares
-     * @param {Number} totalVestingFundSteem
-     * @param {Number} steemRate
-     * @param {Number} sbdRate
+     * @param {JSON} user a user object
+     * @param {Number} numberDecimals default 2, number of decimals to return
+     * @param {Boolean} refreshSteemProperties default true, refresh the Steem properties (Steem rate, etc...)
      */
 
   }, {
     key: 'calculateEstimatedAccountValue',
-    value: function calculateEstimatedAccountValue(user, totalVestingShares, totalVestingFundSteem, steemRate, sbdRate) {
-      var steemPower = this.vestToSteem(user.vesting_shares, totalVestingShares, totalVestingFundSteem);
-      return parseFloat(steemRate) * (parseFloat(user.balance) + parseFloat(steemPower)) + parseFloat(user.sbd_balance) * parseFloat(sbdRate);
+    value: function calculateEstimatedAccountValue(user) {
+      var _this11 = this;
+
+      var numberDecimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
+      var refreshSteemProperties = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+      return new Promise(function () {
+        var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(resolve) {
+          var steemPower;
+          return regeneratorRuntime.wrap(function _callee9$(_context9) {
+            while (1) {
+              switch (_context9.prev = _context9.next) {
+                case 0:
+                  if (!(!_this11.steemProperties || refreshSteemProperties)) {
+                    _context9.next = 3;
+                    break;
+                  }
+
+                  _context9.next = 3;
+                  return _this11.refreshSteemProperties();
+
+                case 3:
+                  steemPower = _this11.vestToSteem(_this11.parsePayoutAmount(user.vesting_shares), _this11.steemProperties.totalVestingShares, _this11.steemProperties.totalVestingFund);
+
+
+                  resolve((parseFloat(_this11.steemProperties.steemRate) * (parseFloat(user.balance) + parseFloat(steemPower)) + parseFloat(user.sbd_balance) * parseFloat(_this11.steemProperties.sbdRate)).toFixed(numberDecimals));
+
+                case 5:
+                case 'end':
+                  return _context9.stop();
+              }
+            }
+          }, _callee9, _this11);
+        }));
+
+        return function (_x36) {
+          return _ref9.apply(this, arguments);
+        };
+      }());
     }
 
     /**
@@ -35181,6 +35387,83 @@ module.exports = function () {
     key: 'vestToSteem',
     value: function vestToSteem(vestingShares, totalVestingShares, totalVestingFundSteem) {
       return parseFloat(totalVestingFundSteem) * (parseFloat(vestingShares) / parseFloat(totalVestingShares));
+    }
+
+    /**
+     * get the USD price of a crypto currency
+     * @param {String} currency a cryptocompare compatible crypto currency code
+     * @returns {Number} the USD price of the crypto currency
+     */
+
+  }, {
+    key: 'getCryptoCurrencyPrice',
+    value: function getCryptoCurrencyPrice(currency) {
+      var _this12 = this;
+
+      return new Promise(function () {
+        var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(resolve) {
+          return regeneratorRuntime.wrap(function _callee11$(_context11) {
+            while (1) {
+              switch (_context11.prev = _context11.next) {
+                case 0:
+                  fetch('https://min-api.cryptocompare.com/data/price?fsym=' + currency + '&tsyms=USD') // eslint-disable-line no-undef
+                  .then(function () {
+                    var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(res) {
+                      var json;
+                      return regeneratorRuntime.wrap(function _callee10$(_context10) {
+                        while (1) {
+                          switch (_context10.prev = _context10.next) {
+                            case 0:
+                              _context10.next = 2;
+                              return res.json();
+
+                            case 2:
+                              json = _context10.sent;
+
+                              resolve(json.USD);
+
+                            case 4:
+                            case 'end':
+                              return _context10.stop();
+                          }
+                        }
+                      }, _callee10, _this12);
+                    }));
+
+                    return function (_x38) {
+                      return _ref11.apply(this, arguments);
+                    };
+                  }());
+
+                case 1:
+                case 'end':
+                  return _context11.stop();
+              }
+            }
+          }, _callee11, _this12);
+        }));
+
+        return function (_x37) {
+          return _ref10.apply(this, arguments);
+        };
+      }());
+    }
+
+    /**
+     * convert a number of bytes into a readable size (1B, 1KB, 1MB, ...)
+     * @param {Number} bytes the bytes to convert
+     * @param {Number} numberDecimals default 2, number of decimals to return
+     * @return {String} formated string representing the size
+     */
+
+  }, {
+    key: 'bytesToSize',
+    value: function bytesToSize(bytes, numberDecimals) {
+      var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      if (bytes === 0) return 'n/a';
+      var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10);
+      if (i === 0) return bytes + ' ' + sizes[i] + ')';
+      return (bytes / Math.pow(1024, i)).toFixed(numberDecimals) + ' ' + sizes[i];
     }
   }], [{
     key: 'REWARD_OPTIONS',

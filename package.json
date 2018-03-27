@@ -1,6 +1,6 @@
 {
   "name": "easysteem",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "main": "lib/easysteem.js",
   "scripts": {
@@ -23,7 +23,8 @@
     "babel-preset-env": "^1.6.1",
     "copy-webpack-plugin": "^4.4.1",
     "cross-env": "^5.0.1",
-    "eslint": "^4.17.0",
+    "docdash": "^0.4.0",
+    "eslint": "^4.19.1",
     "eslint-config-standard": "^11.0.0-beta.0",
     "eslint-loader": "^1.9.0",
     "eslint-plugin-import": "^2.8.0",
@@ -35,7 +36,6 @@
   },
   "dependencies": {
     "bs58": "^4.0.1",
-    "docdash": "^0.4.0",
     "sc2-sdk": "^1.0.2",
     "secure-random": "^1.1.1",
     "speakingurl": "^14.0.1",

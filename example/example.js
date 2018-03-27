@@ -1,19 +1,26 @@
+/* global EasySteem, config */
 /**
  * easysteem testings
  */
 var testMethods = [
-  'getLoginUrl', 
-  'setAccessToken', 
-  // 'me', 
-  'parseReturnedUrl',
+  'getLoginUrl',
+  'setAccessToken',
+  // 'me',
+  // 'parseReturnedUrl'
   // 'getContent',
-  // 'createPost', 
-  // 'updatePost', 
+  // 'createPost',
+  // 'updatePost',
   // 'createComment',
   // 'updateComment',
   // 'deletePostOrComment',
   // 'getFollowers',
   // 'getFollowing'
+  // 'calculateVotingPower',
+  // 'calculateUserVestingShares',
+  'calculateVoteValue',
+  'calculateEstimatedAccountValue',
+  'calculateBandwidth',
+  'calculateReputation'
 ]
 
 var easysteem = new EasySteem(config.appId, 'easysteem', '1.0')
@@ -23,7 +30,7 @@ if (testMethods.indexOf('getLoginUrl') !== -1) {
 }
 
 if (testMethods.indexOf('parseReturnedUrl') !== -1) {
-  console.log(easysteem.parseReturnedUrl('https://my-awesome-website.com/steemconnect/?access_token=THISISASECUREDTOKEN&expires_in=604800&username='+config.username))
+  console.log(easysteem.parseReturnedUrl('https://my-awesome-website.com/steemconnect/?access_token=THISISASECUREDTOKEN&expires_in=604800&username=' + config.username))
 }
 
 if (testMethods.indexOf('setAccessToken') !== -1) {
@@ -56,15 +63,15 @@ if (testMethods.indexOf('getContent') !== -1) {
 
 if (testMethods.indexOf('createPost') !== -1) {
   // create basic post
-  easysteem.createPost( 'test permlink title2', 'body', 'category')
+  easysteem.createPost('test permlink title2', 'body', 'category')
   // create a post with options
   /* easysteem.createPost(
-    'title', 
-    'body', 
-    'category', 
-    ['tag1', 'tag2'], 
+    'title',
+    'body',
+    'category',
+    ['tag1', 'tag2'],
     EasySteem.REWARD_OPTIONS.CENT_PERCENT_SP, // default is set to REWARD_OPTIONS.FIFTY_PERCENT_SP_SBD
-    [ 
+    [
       {
         'account': 'harpagon',
         'weight': 50.99 // represents the percentage (50.99% in this case)
@@ -73,7 +80,7 @@ if (testMethods.indexOf('createPost') !== -1) {
         'account': 'account',
         'weight': 0.01 // represents the percentage (0.01% in this case)
       }
-    ], 
+    ],
     {
       'format': 'html' // default is set to mardown but you can override
     }) */
@@ -84,22 +91,22 @@ if (testMethods.indexOf('createPost') !== -1) {
 if (testMethods.indexOf('updatePost') !== -1) {
   // update a post with auto retrieval of the category
   easysteem.updatePost(
-    'test-permlink-title', 
-    'title_update', 
-    'body_update', 
-    ['tag1', 'tag2'], 
+    'test-permlink-title',
+    'title_update',
+    'body_update',
+    ['tag1', 'tag2'],
     {
       'format': 'html' // default is set to mardown but you can override
     })
   // update a post when knowing the category
   /* easysteem.updatePost(
-    'permlink', 
-    'title', 
-    'body', 
-    ['tag1', 'tag2'], 
+    'permlink',
+    'title',
+    'body',
+    ['tag1', 'tag2'],
     {
       'format': 'html' // default is set to mardown but you can override
-    }, 
+    },
     'category') */
     .then(result => console.log(result))
     .catch(error => console.error(error.error, error.error_description))
@@ -135,5 +142,59 @@ if (testMethods.indexOf('getFollowers') !== -1) {
 if (testMethods.indexOf('getFollowing') !== -1) {
   easysteem.getFollowing('harpagon')
     .then(result => console.log(result))
+    .catch(error => console.error(error.error, error.error_description))
+}
+
+if (testMethods.indexOf('calculateVotingPower') !== -1) {
+  easysteem.me()
+    .then(user => {
+      console.log(easysteem.calculateVotingPower(user.account))
+      for (let i = 0; i < 5; i++) {
+        console.log(easysteem.calculateVotingPower(user.account, i))
+      }
+    })
+    .catch(error => console.error(error.error, error.error_description))
+}
+
+if (testMethods.indexOf('calculateUserVestingShares') !== -1) {
+  easysteem.me()
+    .then(user => {
+      console.log(easysteem.calculateUserVestingShares(user.account))
+    })
+    .catch(error => console.error(error.error, error.error_description))
+}
+
+if (testMethods.indexOf('calculateBandwidth') !== -1) {
+  easysteem.me()
+    .then(user => {
+      easysteem.calculateBandwidth(user.account, 3)
+        .then(result => console.log(result))
+    })
+    .catch(error => console.error(error.error, error.error_description))
+}
+
+if (testMethods.indexOf('calculateVoteValue') !== -1) {
+  easysteem.me()
+    .then(user => {
+      console.log(easysteem.calculateReputation(user.account))
+    })
+    .catch(error => console.error(error.error, error.error_description))
+}
+
+if (testMethods.indexOf('calculateVoteValue') !== -1) {
+  easysteem.me()
+    .then(user => {
+      easysteem.calculateVoteValue(user.account, 100)
+        .then(voteValue => console.log(voteValue))
+    })
+    .catch(error => console.error(error.error, error.error_description))
+}
+
+if (testMethods.indexOf('calculateEstimatedAccountValue') !== -1) {
+  easysteem.me()
+    .then(user => {
+      easysteem.calculateEstimatedAccountValue(user.account)
+        .then(accountValue => console.log(accountValue))
+    })
     .catch(error => console.error(error.error, error.error_description))
 }

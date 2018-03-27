@@ -570,7 +570,7 @@ module.exports = class EasySteem {
     if (payout > maxPayout) payout = maxPayout
     payoutDetails.payoutLimitHit = payout >= maxPayout
 
-    // There is an "active cashout" if: (a) there is a pending payout, OR (b)
+    // There is an 'active cashout' if: (a) there is a pending payout, OR (b)
     // there is a valid cashout_time AND it's NOT a comment with 0 votes.
     const cashoutActive =
     pendingPayout > 0 ||
@@ -585,7 +585,7 @@ module.exports = class EasySteem {
     }
 
     if (cashoutActive) {
-      // Append ".000Z" to make it ISO format (YYYY-MM-DDTHH:mm:ss.sssZ).
+      // Append '.000Z' to make it ISO format (YYYY-MM-DDTHH:mm:ss.sssZ).
       payoutDetails.cashoutInTime = cashoutTime + '.000Z'
     }
 
@@ -662,28 +662,63 @@ module.exports = class EasySteem {
     return Promise.resolve(this.checkPermLinkLength(permlink))
   }
 
+  refreshSteemProperties () {
+    return Promise.all([
+      this.steem.api.getRewardFundAsync('post'),
+      this.steem.api.getDynamicGlobalPropertiesAsync(),
+      this.getCryptoCurrencyPrice('STEEM'),
+      this.getCryptoCurrencyPrice('SBD')
+    ])
+      .then((results) => {
+        this.steemProperties = {}
+        // set the reward balance and the recent claims
+        this.steemProperties.rewardBalance = this.parsePayoutAmount(results[0].reward_balance)
+        this.steemProperties.recentClaims = this.parsePayoutAmount(results[0].recent_claims)
+
+        // set other data
+        this.steemProperties.totalVestingFund = this.parsePayoutAmount(results[1].total_vesting_fund_steem)
+        this.steemProperties.totalVestingShares = this.parsePayoutAmount(results[1].total_vesting_shares)
+        this.steemProperties.maxVirtualBandwidth = parseInt(results[1].max_virtual_bandwidth, 10)
+
+        // set the rates
+        this.steemProperties.steemRate = results[2]
+        this.steemProperties.sbdRate = results[3]
+      })
+  }
+
   /**
-   * calculate the $ value of a vote
-   * @param {Number} vests
-   * @param {Number} recentClaims
-   * @param {Number} rewardBalance
-   * @param {Number} rate
-   * @param {Number} vp
-   * @param {Number} weight
-   * @link https://github.com/aaroncox/chainbb/blob/fcb09bee716e907c789a6494975093361482fb4f/services/frontend/src/components/elements/post/button/vote/options.js#L69
+   * calculate the Steem value of a user vote
+   * @param {JSON} user a user object
+   * @param {Number} voteWeight the weight of the vote to calculate
+   * @param {Number} numberDecimals default 2, number of decimals to return
+   * @param {Boolean} refreshSteemProperties default true, refresh the Steem properties (Steem rate, etc...)
+   * @returns {Number} the value of the vote in Steem
    */
-  calculateVoteValue (
-    vests,
-    recentClaims,
-    rewardBalance,
-    rate,
-    vp = 10000,
-    weight = 10000
-  ) {
-    const vestingShares = parseInt(vests * 1e6, 10)
-    const power = vp * weight / 10000 / 50
-    const rshares = power * vestingShares / 10000
-    return rshares / recentClaims * rewardBalance * rate
+  calculateVoteValue (user, voteWeight = 100.00, numberDecimals = 2, refreshSteemProperties = true) {
+    return new Promise(async resolve => {
+      if (!this.steemProperties || refreshSteemProperties) {
+        await this.refreshSteemProperties()
+      }
+
+      const votingPower = this.calculateVotingPower(user, numberDecimals) * 100
+      voteWeight = voteWeight * 100
+      const vestingShares = parseInt(this.calculateUserVestingShares(user) * 1e6, 10)
+      const power = votingPower * voteWeight / 10000 / 50
+      const rshares = power * vestingShares / 10000
+      resolve((rshares / this.steemProperties.recentClaims * this.steemProperties.rewardBalance * this.steemProperties.steemRate).toFixed(numberDecimals))
+    })
+  }
+
+  /**
+   * calculate a user's vesting shares
+   * @param {JSON} user a user object
+   * @returns {Number} the user's vesting shares
+   */
+  calculateUserVestingShares (user) {
+    const vestingShares = parseFloat(this.parsePayoutAmount(user.vesting_shares))
+    const receivedVestingShares = parseFloat(this.parsePayoutAmount(user.received_vesting_shares))
+    const delegatedVestingShares = parseFloat(this.parsePayoutAmount(user.delegated_vesting_shares))
+    return vestingShares + receivedVestingShares - delegatedVestingShares
   }
 
   /**
@@ -704,37 +739,103 @@ module.exports = class EasySteem {
 
   /**
    * calculate the voting power of a user
-   * @param {JSON} user
+   * @param {JSON} user a user object
+   * @param {Number} numberDecimals number of decimals to return, default 2
+   * @return {Number} a number representing the voting power of the user
    */
-  calculateVotingPower (user) {
-    const secondsago = (new Date().getTime() - new Date(user.last_vote_time + 'Z').getTime()) / 1000
-    return Math.min(10000, user.voting_power + 10000 * secondsago / 432000) / 10000
+  calculateVotingPower (user, numberDecimals = 2) {
+    const secondsago = (new Date() - new Date(user.last_vote_time + 'Z')) / 1000
+    const vpow = user.voting_power + (10000 * secondsago / 432000)
+    return Math.min(vpow / 100, 100).toFixed(numberDecimals)
+  }
+
+  /**
+   * calculate the bandwidth information of a user
+   * @param {JSON} user a user object
+   * @param {Number} numberDecimals number of decimals to return, default 2
+   * @param {Boolean} refreshSteemProperties default true, refresh the Steem properties (Steem rate, etc...)
+   * @returns {JSON} json with the bandwidth information (used, allocated in percents and bytes)
+   */
+  calculateBandwidth (user, numberDecimals = 2, refreshSteemProperties = true) {
+    return new Promise(async resolve => {
+      if (!this.steemProperties || refreshSteemProperties) {
+        await this.refreshSteemProperties()
+      }
+
+      const STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS = 60 * 60 * 24 * 7
+      let vestingShares = parseFloat(this.parsePayoutAmount(user.vesting_shares))
+      let receivedVestingShares = parseFloat(this.parsePayoutAmount(user.received_vesting_shares))
+      let averageBandwidth = parseInt(user.average_bandwidth, 10)
+
+      let deltaTime = (new Date() - new Date(user.last_bandwidth_update + 'Z')) / 1000
+
+      let bandwidthAllocated = (this.steemProperties.maxVirtualBandwidth * (vestingShares + receivedVestingShares) / this.steemProperties.totalVestingShares)
+      bandwidthAllocated = Math.round(bandwidthAllocated / 1000000)
+
+      let newBandwidth = 0
+      if (deltaTime < STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS) {
+        newBandwidth = (((STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS - deltaTime) * averageBandwidth) / STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS)
+      }
+      newBandwidth = Math.round(newBandwidth / 1000000)
+
+      resolve({
+        'percents': {
+          'remaining': (100 - (100 * newBandwidth / bandwidthAllocated)).toFixed(numberDecimals),
+          'used': (100 * newBandwidth / bandwidthAllocated).toFixed(numberDecimals)
+        },
+        'bytes': {
+          'remaining': this.bytesToSize(bandwidthAllocated - newBandwidth, numberDecimals),
+          'used': this.bytesToSize(newBandwidth, numberDecimals),
+          'allocated': this.bytesToSize(bandwidthAllocated, numberDecimals)
+        }
+      })
+    })
+  }
+
+  /**
+   * calculate the reputation in a more readable way
+   * @param {JSON} user a user object
+   * @param {*} numberDecimals number of decimals to return, default 2
+   */
+  calculateReputation (user, numberDecimals = 2) {
+    const rawReputation = user.reputation
+    const isNegative = (rawReputation < 0)
+    let reputation = Math.log10(Math.abs(rawReputation))
+
+    reputation = Math.max(reputation - 9, 0)
+    reputation *= isNegative ? -9 : 9
+    reputation += 25
+
+    return reputation.toFixed(numberDecimals)
   }
 
   /**
    * calculate an estimation of an account value
-   * @param {JSON} user
-   * @param {Number} totalVestingShares
-   * @param {Number} totalVestingFundSteem
-   * @param {Number} steemRate
-   * @param {Number} sbdRate
+   * @param {JSON} user a user object
+   * @param {Number} numberDecimals default 2, number of decimals to return
+   * @param {Boolean} refreshSteemProperties default true, refresh the Steem properties (Steem rate, etc...)
    */
   calculateEstimatedAccountValue (
     user,
-    totalVestingShares,
-    totalVestingFundSteem,
-    steemRate,
-    sbdRate
+    numberDecimals = 2,
+    refreshSteemProperties = true
   ) {
-    const steemPower = this.vestToSteem(
-      user.vesting_shares,
-      totalVestingShares,
-      totalVestingFundSteem
-    )
-    return (
-      parseFloat(steemRate) * (parseFloat(user.balance) + parseFloat(steemPower)) +
-      parseFloat(user.sbd_balance) * parseFloat(sbdRate)
-    )
+    return new Promise(async resolve => {
+      if (!this.steemProperties || refreshSteemProperties) {
+        await this.refreshSteemProperties()
+      }
+
+      const steemPower = this.vestToSteem(
+        this.parsePayoutAmount(user.vesting_shares),
+        this.steemProperties.totalVestingShares,
+        this.steemProperties.totalVestingFund
+      )
+
+      resolve(
+        (parseFloat(this.steemProperties.steemRate) * (parseFloat(user.balance) + parseFloat(steemPower)) +
+         parseFloat(user.sbd_balance) * parseFloat(this.steemProperties.sbdRate)).toFixed(numberDecimals)
+      )
+    })
   }
 
   /**
@@ -748,5 +849,34 @@ module.exports = class EasySteem {
       parseFloat(totalVestingFundSteem) *
       (parseFloat(vestingShares) / parseFloat(totalVestingShares))
     )
+  }
+
+  /**
+   * get the USD price of a crypto currency
+   * @param {String} currency a cryptocompare compatible crypto currency code
+   * @returns {Number} the USD price of the crypto currency
+   */
+  getCryptoCurrencyPrice (currency) {
+    return new Promise(async resolve => {
+      fetch(`https://min-api.cryptocompare.com/data/price?fsym=${currency}&tsyms=USD`) // eslint-disable-line no-undef
+        .then(async res => {
+          const json = await res.json()
+          resolve(json.USD)
+        })
+    })
+  }
+
+  /**
+   * convert a number of bytes into a readable size (1B, 1KB, 1MB, ...)
+   * @param {Number} bytes the bytes to convert
+   * @param {Number} numberDecimals default 2, number of decimals to return
+   * @return {String} formated string representing the size
+   */
+  bytesToSize (bytes, numberDecimals) {
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+    if (bytes === 0) return 'n/a'
+    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
+    if (i === 0) return `${bytes} ${sizes[i]})`
+    return `${(bytes / (1024 ** i)).toFixed(numberDecimals)} ${sizes[i]}`
   }
 }
