@@ -35058,6 +35058,7 @@ module.exports = function () {
     value: function slug(text) {
       return (0, _speakingurl2.default)(text.replace(/[<>]/g, ''), { truncate: 128 });
     }
+
     /**
      * create a permlink
      * @param {String} title title of the post (empty for a comment)
@@ -35103,6 +35104,11 @@ module.exports = function () {
       permlink = 're-' + parentAuthor + '-' + parentPermlink + '-' + timeStr;
       return Promise.resolve(this.checkPermLinkLength(permlink));
     }
+
+    /**
+     * Refresh the global propertis linked to Steem and the rates
+     */
+
   }, {
     key: 'refreshSteemProperties',
     value: function refreshSteemProperties() {
@@ -35312,10 +35318,9 @@ module.exports = function () {
 
   }, {
     key: 'calculateReputation',
-    value: function calculateReputation(user) {
+    value: function calculateReputation(rawReputation) {
       var numberDecimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
 
-      var rawReputation = user.reputation;
       var isNegative = rawReputation < 0;
       var reputation = Math.log10(Math.abs(rawReputation));
 
@@ -35450,6 +35455,207 @@ module.exports = function () {
     }
 
     /**
+     * orders the votes
+     * @param {Array<JSON>} votes array containing the votes
+     * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but REPUTATION, PERCENT, PAYOUT available
+     * @returns {Array<JSON>} the input array ordered
+     */
+
+  }, {
+    key: 'orderVotes',
+    value: function orderVotes(votes) {
+      var _this13 = this;
+
+      var orderBy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : EasySteem.ORDER_OPTIONS.PAYOUT;
+
+      return new Promise(function () {
+        var _ref12 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(resolve) {
+          return regeneratorRuntime.wrap(function _callee12$(_context12) {
+            while (1) {
+              switch (_context12.prev = _context12.next) {
+                case 0:
+                  if (!(!_this13.steemProperties && orderBy === EasySteem.ORDER_OPTIONS.PAYOUT)) {
+                    _context12.next = 3;
+                    break;
+                  }
+
+                  _context12.next = 3;
+                  return _this13.refreshSteemProperties();
+
+                case 3:
+                  if (!(votes.length > 1)) {
+                    _context12.next = 7;
+                    break;
+                  }
+
+                  votes.sort(function (a, b) {
+                    switch (orderBy) {
+                      case EasySteem.ORDER_OPTIONS.PAYOUT:
+                        var votePayoutA = _this13.sharesToSteem(a.rshares);
+                        a.votePayout = votePayoutA.toFixed(3);
+                        var votePayoutB = _this13.sharesToSteem(b.rshares);
+                        b.votePayout = votePayoutB.toFixed(3);
+                        return votePayoutA > votePayoutB ? -1 : votePayoutA < votePayoutB ? 1 : 0;
+
+                      case EasySteem.ORDER_OPTIONS.REPUTATION:
+                        var voteReputationA = _this13.calculateReputation(a.reputation);
+                        a.voteReputation = voteReputationA;
+                        var voteReputationB = _this13.calculateReputation(b.reputation);
+                        b.voteReputation = voteReputationB;
+                        return voteReputationA > voteReputationB ? -1 : voteReputationA < voteReputationB ? 1 : 0;
+
+                      case EasySteem.ORDER_OPTIONS.PERCENT:
+                        var votePercentA = a.percent;
+                        var votePercentB = b.percent;
+                        return votePercentA > votePercentB ? -1 : votePercentA < votePercentB ? 1 : 0;
+                    }
+                  });
+                  _context12.next = 15;
+                  break;
+
+                case 7:
+                  if (!(votes.length > 0)) {
+                    _context12.next = 15;
+                    break;
+                  }
+
+                  _context12.t0 = orderBy;
+                  _context12.next = _context12.t0 === EasySteem.ORDER_OPTIONS.PAYOUT ? 11 : _context12.t0 === EasySteem.ORDER_OPTIONS.REPUTATION ? 13 : 15;
+                  break;
+
+                case 11:
+                  votes[0].votePayout = _this13.sharesToSteem(votes[0].rshares).toFixed(3);
+                  return _context12.abrupt('break', 15);
+
+                case 13:
+                  votes[0].voteReputation = _this13.calculateReputation(votes[0].reputation);
+                  return _context12.abrupt('break', 15);
+
+                case 15:
+
+                  resolve(votes);
+
+                case 16:
+                case 'end':
+                  return _context12.stop();
+              }
+            }
+          }, _callee12, _this13);
+        }));
+
+        return function (_x40) {
+          return _ref12.apply(this, arguments);
+        };
+      }());
+    }
+
+    /**
+     * orders the comments
+     * @param {Array<JSON>} votes array containing the comments
+     * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but OLDEST, NEWEST, REPUTATION, PAYOUT available
+     * @returns {Array<JSON>} the input array ordered
+     */
+
+  }, {
+    key: 'orderComments',
+    value: function orderComments(comments) {
+      var _this14 = this;
+
+      var orderBy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : EasySteem.ORDER_OPTIONS.PAYOUT;
+
+      return new Promise(function () {
+        var _ref13 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(resolve) {
+          return regeneratorRuntime.wrap(function _callee13$(_context13) {
+            while (1) {
+              switch (_context13.prev = _context13.next) {
+                case 0:
+                  if (!(!_this14.steemProperties && orderBy === EasySteem.ORDER_OPTIONS.PAYOUT)) {
+                    _context13.next = 3;
+                    break;
+                  }
+
+                  _context13.next = 3;
+                  return _this14.refreshSteemProperties();
+
+                case 3:
+                  if (!(comments.length > 1)) {
+                    _context13.next = 7;
+                    break;
+                  }
+
+                  comments.sort(function (a, b) {
+                    switch (orderBy) {
+                      case EasySteem.ORDER_OPTIONS.NEWEST:
+                        a = new Date(a.created);
+                        b = new Date(b.created);
+                        return a > b ? -1 : a < b ? 1 : 0;
+
+                      case EasySteem.ORDER_OPTIONS.OLDEST:
+                        a = new Date(a.created);
+                        b = new Date(b.created);
+                        return a < b ? -1 : a > b ? 1 : 0;
+
+                      case EasySteem.ORDER_OPTIONS.PAYOUT:
+                        a = _this14.parsePayoutAmount(a.pending_payout_value) === 0 ? _this14.parsePayoutAmount(a.total_payout_value) + _this14.parsePayoutAmount(a.curator_payout_value) : _this14.parsePayoutAmount(a.pending_payout_value);
+                        b = _this14.parsePayoutAmount(b.pending_payout_value) === 0 ? _this14.parsePayoutAmount(b.total_payout_value) + _this14.parsePayoutAmount(b.curator_payout_value) : _this14.parsePayoutAmount(b.pending_payout_value);
+                        return a > b ? -1 : a < b ? 1 : 0;
+
+                      case EasySteem.ORDER_OPTIONS.REPUTATION:
+                        var commentReputationA = _this14.calculateReputation(a.author_reputation);
+                        a.commentReputation = commentReputationA;
+                        var commentReputationB = _this14.calculateReputation(b.author_reputation);
+                        b.commentReputation = commentReputationB;
+                        return commentReputationA > commentReputationB ? -1 : commentReputationA < commentReputationB ? 1 : 0;
+                    }
+                  });
+                  _context13.next = 13;
+                  break;
+
+                case 7:
+                  if (!(comments.length > 0)) {
+                    _context13.next = 13;
+                    break;
+                  }
+
+                  _context13.t0 = orderBy;
+                  _context13.next = _context13.t0 === EasySteem.ORDER_OPTIONS.REPUTATION ? 11 : 13;
+                  break;
+
+                case 11:
+                  comments[0].commentReputation = _this14.calculateReputation(comments[0].author_reputation);
+                  return _context13.abrupt('break', 13);
+
+                case 13:
+
+                  resolve(comments);
+
+                case 14:
+                case 'end':
+                  return _context13.stop();
+              }
+            }
+          }, _callee13, _this14);
+        }));
+
+        return function (_x42) {
+          return _ref13.apply(this, arguments);
+        };
+      }());
+    }
+
+    /**
+     * converts a number of shares into a number of Steem
+     * @param {Number} rshares number of shares
+     * @returns the shares converted into a Steem value
+     */
+
+  }, {
+    key: 'sharesToSteem',
+    value: function sharesToSteem(shares) {
+      return shares * this.steemProperties.rewardBalance / this.steemProperties.recentClaims * this.steemProperties.steemRate;
+    }
+
+    /**
      * convert a number of bytes into a readable size (1B, 1KB, 1MB, ...)
      * @param {Number} bytes the bytes to convert
      * @param {Number} numberDecimals default 2, number of decimals to return
@@ -35472,6 +35678,22 @@ module.exports = function () {
         'CENT_PERCENT_SP': '100',
         'FIFTY_PERCENT_SP_SBD': '50',
         'NONE': '0'
+      };
+    }
+
+    /**
+     * order options
+     */
+
+  }, {
+    key: 'ORDER_OPTIONS',
+    get: function get() {
+      return {
+        'REPUTATION': 'REPUTATION',
+        'PAYOUT': 'PAYOUT',
+        'PERCENT': 'PERCENT',
+        'OLDEST': 'OLDEST',
+        'NEWEST': 'NEWEST'
       };
     }
   }]);

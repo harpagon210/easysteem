@@ -20,7 +20,9 @@ var testMethods = [
   'calculateVoteValue',
   'calculateEstimatedAccountValue',
   'calculateBandwidth',
-  'calculateReputation'
+  'calculateReputation',
+  'orderVotes',
+  'orderComments'
 ]
 
 var easysteem = new EasySteem(config.appId, 'easysteem', '1.0')
@@ -176,7 +178,7 @@ if (testMethods.indexOf('calculateBandwidth') !== -1) {
 if (testMethods.indexOf('calculateVoteValue') !== -1) {
   easysteem.me()
     .then(user => {
-      console.log(easysteem.calculateReputation(user.account))
+      console.log(easysteem.calculateReputation(user.account.reputation))
     })
     .catch(error => console.error(error.error, error.error_description))
 }
@@ -195,6 +197,24 @@ if (testMethods.indexOf('calculateEstimatedAccountValue') !== -1) {
     .then(user => {
       easysteem.calculateEstimatedAccountValue(user.account)
         .then(accountValue => console.log(accountValue))
+    })
+    .catch(error => console.error(error.error, error.error_description))
+}
+
+if (testMethods.indexOf('orderVotes') !== -1) {
+  easysteem.getContent('harpagon', 'easysteem-a-library-that-makes-steem-javascript-developments-easy')
+    .then(postContent => {
+      easysteem.orderVotes(postContent.active_votes, EasySteem.ORDER_OPTIONS.REPUTATION)
+        .then(result => console.log(result))
+    })
+    .catch(error => console.error(error.error, error.error_description))
+}
+
+if (testMethods.indexOf('orderComments') !== -1) {
+  easysteem.getContentReplies('harpagon', 'easysteem-la-librairie-javascript-qui-va-vous-simplifier-la-vie')
+    .then(postContentReplies => {
+      easysteem.orderComments(postContentReplies, EasySteem.ORDER_OPTIONS.REPUTATION)
+        .then(result => console.log(result))
     })
     .catch(error => console.error(error.error, error.error_description))
 }

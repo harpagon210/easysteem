@@ -36,6 +36,19 @@ module.exports = class EasySteem {
   }
 
   /**
+   * order options
+   */
+  static get ORDER_OPTIONS () {
+    return {
+      'REPUTATION': 'REPUTATION',
+      'PAYOUT': 'PAYOUT',
+      'PERCENT': 'PERCENT',
+      'OLDEST': 'OLDEST',
+      'NEWEST': 'NEWEST'
+    }
+  }
+
+  /**
    * get the url where the user can log into steemconnect
    * @param {Array<String>} scope scope of your application (https://github.com/steemit/steemconnect/wiki/OAuth-2#scopes)
    * @param {String} callbackUrl url where the users will be redirected after interacting with steemconnect
@@ -622,6 +635,7 @@ module.exports = class EasySteem {
   slug (text) {
     return getSlug(text.replace(/[<>]/g, ''), { truncate: 128 })
   }
+
   /**
    * create a permlink
    * @param {String} title title of the post (empty for a comment)
@@ -662,6 +676,9 @@ module.exports = class EasySteem {
     return Promise.resolve(this.checkPermLinkLength(permlink))
   }
 
+  /**
+   * Refresh the global propertis linked to Steem and the rates
+   */
   refreshSteemProperties () {
     return Promise.all([
       this.steem.api.getRewardFundAsync('post'),
@@ -797,8 +814,7 @@ module.exports = class EasySteem {
    * @param {JSON} user a user object
    * @param {*} numberDecimals number of decimals to return, default 2
    */
-  calculateReputation (user, numberDecimals = 2) {
-    const rawReputation = user.reputation
+  calculateReputation (rawReputation, numberDecimals = 2) {
     const isNegative = (rawReputation < 0)
     let reputation = Math.log10(Math.abs(rawReputation))
 
@@ -864,6 +880,117 @@ module.exports = class EasySteem {
           resolve(json.USD)
         })
     })
+  }
+
+  /**
+   * orders the votes
+   * @param {Array<JSON>} votes array containing the votes
+   * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but REPUTATION, PERCENT, PAYOUT available
+   * @returns {Array<JSON>} the input array ordered
+   */
+  orderVotes (votes, orderBy = EasySteem.ORDER_OPTIONS.PAYOUT) {
+    return new Promise(async resolve => {
+      if (!this.steemProperties && orderBy === EasySteem.ORDER_OPTIONS.PAYOUT) {
+        await this.refreshSteemProperties()
+      }
+
+      if (votes.length > 1) {
+        votes.sort((a, b) => {
+          switch (orderBy) {
+            case EasySteem.ORDER_OPTIONS.PAYOUT:
+              let votePayoutA = this.sharesToSteem(a.rshares)
+              a.votePayout = votePayoutA.toFixed(3)
+              let votePayoutB = this.sharesToSteem(b.rshares)
+              b.votePayout = votePayoutB.toFixed(3)
+              return votePayoutA > votePayoutB ? -1 : votePayoutA < votePayoutB ? 1 : 0
+
+            case EasySteem.ORDER_OPTIONS.REPUTATION:
+              let voteReputationA = this.calculateReputation(a.reputation)
+              a.voteReputation = voteReputationA
+              let voteReputationB = this.calculateReputation(b.reputation)
+              b.voteReputation = voteReputationB
+              return voteReputationA > voteReputationB ? -1 : voteReputationA < voteReputationB ? 1 : 0
+
+            case EasySteem.ORDER_OPTIONS.PERCENT:
+              let votePercentA = a.percent
+              let votePercentB = b.percent
+              return votePercentA > votePercentB ? -1 : votePercentA < votePercentB ? 1 : 0
+          }
+        })
+      } else if (votes.length > 0) {
+        switch (orderBy) {
+          case EasySteem.ORDER_OPTIONS.PAYOUT:
+            votes[0].votePayout = this.sharesToSteem(votes[0].rshares).toFixed(3)
+            break
+          case EasySteem.ORDER_OPTIONS.REPUTATION:
+            votes[0].voteReputation = this.calculateReputation(votes[0].reputation)
+            break
+          default:
+        }
+      }
+
+      resolve(votes)
+    })
+  }
+
+  /**
+   * orders the comments
+   * @param {Array<JSON>} votes array containing the comments
+   * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but OLDEST, NEWEST, REPUTATION, PAYOUT available
+   * @returns {Array<JSON>} the input array ordered
+   */
+  orderComments (comments, orderBy = EasySteem.ORDER_OPTIONS.PAYOUT) {
+    return new Promise(async resolve => {
+      if (!this.steemProperties && orderBy === EasySteem.ORDER_OPTIONS.PAYOUT) {
+        await this.refreshSteemProperties()
+      }
+
+      if (comments.length > 1) {
+        comments.sort((a, b) => {
+          switch (orderBy) {
+            case EasySteem.ORDER_OPTIONS.NEWEST:
+              a = new Date(a.created)
+              b = new Date(b.created)
+              return a > b ? -1 : a < b ? 1 : 0
+
+            case EasySteem.ORDER_OPTIONS.OLDEST:
+              a = new Date(a.created)
+              b = new Date(b.created)
+              return a < b ? -1 : a > b ? 1 : 0
+
+            case EasySteem.ORDER_OPTIONS.PAYOUT:
+              a = this.parsePayoutAmount(a.pending_payout_value) === 0 ? this.parsePayoutAmount(a.total_payout_value) + this.parsePayoutAmount(a.curator_payout_value) : this.parsePayoutAmount(a.pending_payout_value)
+              b = this.parsePayoutAmount(b.pending_payout_value) === 0 ? this.parsePayoutAmount(b.total_payout_value) + this.parsePayoutAmount(b.curator_payout_value) : this.parsePayoutAmount(b.pending_payout_value)
+              return a > b ? -1 : a < b ? 1 : 0
+
+            case EasySteem.ORDER_OPTIONS.REPUTATION:
+              let commentReputationA = this.calculateReputation(a.author_reputation)
+              a.commentReputation = commentReputationA
+              let commentReputationB = this.calculateReputation(b.author_reputation)
+              b.commentReputation = commentReputationB
+              return commentReputationA > commentReputationB ? -1 : commentReputationA < commentReputationB ? 1 : 0
+          }
+        })
+      } else if (comments.length > 0) {
+        switch (orderBy) {
+          case EasySteem.ORDER_OPTIONS.REPUTATION:
+            comments[0].commentReputation = this.calculateReputation(comments[0].author_reputation)
+            break
+          default:
+        }
+      }
+
+      resolve(comments)
+    })
+  }
+
+  /**
+   * converts a number of shares into a number of Steem
+   * @param {Number} rshares number of shares
+   * @returns the shares converted into a Steem value
+   */
+  sharesToSteem (shares) {
+    return shares * this.steemProperties.rewardBalance / this.steemProperties.recentClaims * this.steemProperties.steemRate
   }
 
   /**
