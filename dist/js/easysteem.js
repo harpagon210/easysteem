@@ -34944,24 +34944,94 @@ module.exports = function () {
      * get the active votes of a post or comment
      * @param {String} author author of the post or comment
      * @param {String} permlink permlink of the post or comment
+     * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but REPUTATION, PERCENT, PAYOUT available
+     * @returns {Array<JSON>} return the active votes of the post or comment ordered
      */
 
   }, {
     key: 'getActiveVotes',
     value: function getActiveVotes(author, permlink) {
-      return this.steem.api.getActiveVotesAsync(author, permlink);
+      var _this7 = this;
+
+      var orderBy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : EasySteem.ORDER_OPTIONS.PAYOUT;
+
+      return new Promise(function () {
+        var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(resolve) {
+          var votes;
+          return regeneratorRuntime.wrap(function _callee7$(_context7) {
+            while (1) {
+              switch (_context7.prev = _context7.next) {
+                case 0:
+                  _context7.next = 2;
+                  return _this7.steem.api.getActiveVotesAsync(author, permlink);
+
+                case 2:
+                  votes = _context7.sent;
+                  _context7.next = 5;
+                  return _this7.orderVotes(votes, orderBy);
+
+                case 5:
+                  resolve(votes);
+
+                case 6:
+                case 'end':
+                  return _context7.stop();
+              }
+            }
+          }, _callee7, _this7);
+        }));
+
+        return function (_x24) {
+          return _ref7.apply(this, arguments);
+        };
+      }());
     }
 
     /**
      * get the replies to a post or comment
      * @param {String} author author of the post or comment
      * @param {String} permlink permlink of the post or comment
+     * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but OLDEST, NEWEST, REPUTATION, PAYOUT available
+     * @returns {Array<JSON>} return the commments of the post or comment ordered
      */
 
   }, {
     key: 'getContentReplies',
     value: function getContentReplies(author, permlink) {
-      return this.steem.api.getContentRepliesAsync(author, permlink);
+      var _this8 = this;
+
+      var orderBy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : EasySteem.ORDER_OPTIONS.PAYOUT;
+
+      return new Promise(function () {
+        var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(resolve) {
+          var comments;
+          return regeneratorRuntime.wrap(function _callee8$(_context8) {
+            while (1) {
+              switch (_context8.prev = _context8.next) {
+                case 0:
+                  _context8.next = 2;
+                  return _this8.steem.api.getContentRepliesAsync(author, permlink);
+
+                case 2:
+                  comments = _context8.sent;
+                  _context8.next = 5;
+                  return _this8.orderComments(comments, orderBy);
+
+                case 5:
+                  resolve(comments);
+
+                case 6:
+                case 'end':
+                  return _context8.stop();
+              }
+            }
+          }, _callee8, _this8);
+        }));
+
+        return function (_x26) {
+          return _ref8.apply(this, arguments);
+        };
+      }());
     }
 
     /**
@@ -35071,7 +35141,7 @@ module.exports = function () {
   }, {
     key: 'createPermlink',
     value: function createPermlink(title) {
-      var _this7 = this;
+      var _this9 = this;
 
       var parentAuthor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
       var parentPermlink = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
@@ -35092,7 +35162,7 @@ module.exports = function () {
             prefix = '';
           }
           permlink = prefix + s;
-          return _this7.checkPermLinkLength(permlink);
+          return _this9.checkPermLinkLength(permlink);
         }).catch(function (err) {
           console.warn('Error while getting content', err);
           return permlink;
@@ -35112,22 +35182,22 @@ module.exports = function () {
   }, {
     key: 'refreshSteemProperties',
     value: function refreshSteemProperties() {
-      var _this8 = this;
+      var _this10 = this;
 
       return Promise.all([this.steem.api.getRewardFundAsync('post'), this.steem.api.getDynamicGlobalPropertiesAsync(), this.getCryptoCurrencyPrice('STEEM'), this.getCryptoCurrencyPrice('SBD')]).then(function (results) {
-        _this8.steemProperties = {};
+        _this10.steemProperties = {};
         // set the reward balance and the recent claims
-        _this8.steemProperties.rewardBalance = _this8.parsePayoutAmount(results[0].reward_balance);
-        _this8.steemProperties.recentClaims = _this8.parsePayoutAmount(results[0].recent_claims);
+        _this10.steemProperties.rewardBalance = _this10.parsePayoutAmount(results[0].reward_balance);
+        _this10.steemProperties.recentClaims = _this10.parsePayoutAmount(results[0].recent_claims);
 
         // set other data
-        _this8.steemProperties.totalVestingFund = _this8.parsePayoutAmount(results[1].total_vesting_fund_steem);
-        _this8.steemProperties.totalVestingShares = _this8.parsePayoutAmount(results[1].total_vesting_shares);
-        _this8.steemProperties.maxVirtualBandwidth = parseInt(results[1].max_virtual_bandwidth, 10);
+        _this10.steemProperties.totalVestingFund = _this10.parsePayoutAmount(results[1].total_vesting_fund_steem);
+        _this10.steemProperties.totalVestingShares = _this10.parsePayoutAmount(results[1].total_vesting_shares);
+        _this10.steemProperties.maxVirtualBandwidth = parseInt(results[1].max_virtual_bandwidth, 10);
 
         // set the rates
-        _this8.steemProperties.steemRate = results[2];
-        _this8.steemProperties.sbdRate = results[3];
+        _this10.steemProperties.steemRate = results[2];
+        _this10.steemProperties.sbdRate = results[3];
       });
     }
 
@@ -35145,46 +35215,46 @@ module.exports = function () {
     value: function calculateVoteValue(user) {
       var voteWeight = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100.00;
 
-      var _this9 = this;
+      var _this11 = this;
 
       var numberDecimals = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
       var refreshSteemProperties = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 
       return new Promise(function () {
-        var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(resolve) {
+        var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(resolve) {
           var votingPower, vestingShares, power, rshares;
-          return regeneratorRuntime.wrap(function _callee7$(_context7) {
+          return regeneratorRuntime.wrap(function _callee9$(_context9) {
             while (1) {
-              switch (_context7.prev = _context7.next) {
+              switch (_context9.prev = _context9.next) {
                 case 0:
-                  if (!(!_this9.steemProperties || refreshSteemProperties)) {
-                    _context7.next = 3;
+                  if (!(!_this11.steemProperties || refreshSteemProperties)) {
+                    _context9.next = 3;
                     break;
                   }
 
-                  _context7.next = 3;
-                  return _this9.refreshSteemProperties();
+                  _context9.next = 3;
+                  return _this11.refreshSteemProperties();
 
                 case 3:
-                  votingPower = _this9.calculateVotingPower(user, numberDecimals) * 100;
+                  votingPower = _this11.calculateVotingPower(user, numberDecimals) * 100;
 
                   voteWeight = voteWeight * 100;
-                  vestingShares = parseInt(_this9.calculateUserVestingShares(user) * 1e6, 10);
+                  vestingShares = parseInt(_this11.calculateUserVestingShares(user) * 1e6, 10);
                   power = votingPower * voteWeight / 10000 / 50;
                   rshares = power * vestingShares / 10000;
 
-                  resolve((rshares / _this9.steemProperties.recentClaims * _this9.steemProperties.rewardBalance * _this9.steemProperties.steemRate).toFixed(numberDecimals));
+                  resolve((rshares / _this11.steemProperties.recentClaims * _this11.steemProperties.rewardBalance * _this11.steemProperties.steemRate).toFixed(numberDecimals));
 
                 case 9:
                 case 'end':
-                  return _context7.stop();
+                  return _context9.stop();
               }
             }
-          }, _callee7, _this9);
+          }, _callee9, _this11);
         }));
 
-        return function (_x28) {
-          return _ref7.apply(this, arguments);
+        return function (_x32) {
+          return _ref9.apply(this, arguments);
         };
       }());
     }
@@ -35247,33 +35317,33 @@ module.exports = function () {
   }, {
     key: 'calculateBandwidth',
     value: function calculateBandwidth(user) {
-      var _this10 = this;
+      var _this12 = this;
 
       var numberDecimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
       var refreshSteemProperties = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
       return new Promise(function () {
-        var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(resolve) {
+        var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(resolve) {
           var STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS, vestingShares, receivedVestingShares, averageBandwidth, deltaTime, bandwidthAllocated, newBandwidth;
-          return regeneratorRuntime.wrap(function _callee8$(_context8) {
+          return regeneratorRuntime.wrap(function _callee10$(_context10) {
             while (1) {
-              switch (_context8.prev = _context8.next) {
+              switch (_context10.prev = _context10.next) {
                 case 0:
-                  if (!(!_this10.steemProperties || refreshSteemProperties)) {
-                    _context8.next = 3;
+                  if (!(!_this12.steemProperties || refreshSteemProperties)) {
+                    _context10.next = 3;
                     break;
                   }
 
-                  _context8.next = 3;
-                  return _this10.refreshSteemProperties();
+                  _context10.next = 3;
+                  return _this12.refreshSteemProperties();
 
                 case 3:
                   STEEMIT_BANDWIDTH_AVERAGE_WINDOW_SECONDS = 60 * 60 * 24 * 7;
-                  vestingShares = parseFloat(_this10.parsePayoutAmount(user.vesting_shares));
-                  receivedVestingShares = parseFloat(_this10.parsePayoutAmount(user.received_vesting_shares));
+                  vestingShares = parseFloat(_this12.parsePayoutAmount(user.vesting_shares));
+                  receivedVestingShares = parseFloat(_this12.parsePayoutAmount(user.received_vesting_shares));
                   averageBandwidth = parseInt(user.average_bandwidth, 10);
                   deltaTime = (new Date() - new Date(user.last_bandwidth_update + 'Z')) / 1000;
-                  bandwidthAllocated = _this10.steemProperties.maxVirtualBandwidth * (vestingShares + receivedVestingShares) / _this10.steemProperties.totalVestingShares;
+                  bandwidthAllocated = _this12.steemProperties.maxVirtualBandwidth * (vestingShares + receivedVestingShares) / _this12.steemProperties.totalVestingShares;
 
                   bandwidthAllocated = Math.round(bandwidthAllocated / 1000000);
 
@@ -35290,22 +35360,22 @@ module.exports = function () {
                       'used': (100 * newBandwidth / bandwidthAllocated).toFixed(numberDecimals)
                     },
                     'bytes': {
-                      'remaining': _this10.bytesToSize(bandwidthAllocated - newBandwidth, numberDecimals),
-                      'used': _this10.bytesToSize(newBandwidth, numberDecimals),
-                      'allocated': _this10.bytesToSize(bandwidthAllocated, numberDecimals)
+                      'remaining': _this12.bytesToSize(bandwidthAllocated - newBandwidth, numberDecimals),
+                      'used': _this12.bytesToSize(newBandwidth, numberDecimals),
+                      'allocated': _this12.bytesToSize(bandwidthAllocated, numberDecimals)
                     }
                   });
 
                 case 14:
                 case 'end':
-                  return _context8.stop();
+                  return _context10.stop();
               }
             }
-          }, _callee8, _this10);
+          }, _callee10, _this12);
         }));
 
-        return function (_x32) {
-          return _ref8.apply(this, arguments);
+        return function (_x36) {
+          return _ref10.apply(this, arguments);
         };
       }());
     }
@@ -35341,42 +35411,42 @@ module.exports = function () {
   }, {
     key: 'calculateEstimatedAccountValue',
     value: function calculateEstimatedAccountValue(user) {
-      var _this11 = this;
+      var _this13 = this;
 
       var numberDecimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
       var refreshSteemProperties = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
       return new Promise(function () {
-        var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(resolve) {
+        var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(resolve) {
           var steemPower;
-          return regeneratorRuntime.wrap(function _callee9$(_context9) {
+          return regeneratorRuntime.wrap(function _callee11$(_context11) {
             while (1) {
-              switch (_context9.prev = _context9.next) {
+              switch (_context11.prev = _context11.next) {
                 case 0:
-                  if (!(!_this11.steemProperties || refreshSteemProperties)) {
-                    _context9.next = 3;
+                  if (!(!_this13.steemProperties || refreshSteemProperties)) {
+                    _context11.next = 3;
                     break;
                   }
 
-                  _context9.next = 3;
-                  return _this11.refreshSteemProperties();
+                  _context11.next = 3;
+                  return _this13.refreshSteemProperties();
 
                 case 3:
-                  steemPower = _this11.vestToSteem(_this11.parsePayoutAmount(user.vesting_shares), _this11.steemProperties.totalVestingShares, _this11.steemProperties.totalVestingFund);
+                  steemPower = _this13.vestToSteem(_this13.parsePayoutAmount(user.vesting_shares), _this13.steemProperties.totalVestingShares, _this13.steemProperties.totalVestingFund);
 
 
-                  resolve((parseFloat(_this11.steemProperties.steemRate) * (parseFloat(user.balance) + parseFloat(steemPower)) + parseFloat(user.sbd_balance) * parseFloat(_this11.steemProperties.sbdRate)).toFixed(numberDecimals));
+                  resolve((parseFloat(_this13.steemProperties.steemRate) * (parseFloat(user.balance) + parseFloat(steemPower)) + parseFloat(user.sbd_balance) * parseFloat(_this13.steemProperties.sbdRate)).toFixed(numberDecimals));
 
                 case 5:
                 case 'end':
-                  return _context9.stop();
+                  return _context11.stop();
               }
             }
-          }, _callee9, _this11);
+          }, _callee11, _this13);
         }));
 
-        return function (_x36) {
-          return _ref9.apply(this, arguments);
+        return function (_x40) {
+          return _ref11.apply(this, arguments);
         };
       }());
     }
@@ -35403,53 +35473,53 @@ module.exports = function () {
   }, {
     key: 'getCryptoCurrencyPrice',
     value: function getCryptoCurrencyPrice(currency) {
-      var _this12 = this;
+      var _this14 = this;
 
       return new Promise(function () {
-        var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(resolve) {
-          return regeneratorRuntime.wrap(function _callee11$(_context11) {
+        var _ref12 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(resolve) {
+          return regeneratorRuntime.wrap(function _callee13$(_context13) {
             while (1) {
-              switch (_context11.prev = _context11.next) {
+              switch (_context13.prev = _context13.next) {
                 case 0:
                   fetch('https://min-api.cryptocompare.com/data/price?fsym=' + currency + '&tsyms=USD') // eslint-disable-line no-undef
                   .then(function () {
-                    var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(res) {
+                    var _ref13 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(res) {
                       var json;
-                      return regeneratorRuntime.wrap(function _callee10$(_context10) {
+                      return regeneratorRuntime.wrap(function _callee12$(_context12) {
                         while (1) {
-                          switch (_context10.prev = _context10.next) {
+                          switch (_context12.prev = _context12.next) {
                             case 0:
-                              _context10.next = 2;
+                              _context12.next = 2;
                               return res.json();
 
                             case 2:
-                              json = _context10.sent;
+                              json = _context12.sent;
 
                               resolve(json.USD);
 
                             case 4:
                             case 'end':
-                              return _context10.stop();
+                              return _context12.stop();
                           }
                         }
-                      }, _callee10, _this12);
+                      }, _callee12, _this14);
                     }));
 
-                    return function (_x38) {
-                      return _ref11.apply(this, arguments);
+                    return function (_x42) {
+                      return _ref13.apply(this, arguments);
                     };
                   }());
 
                 case 1:
                 case 'end':
-                  return _context11.stop();
+                  return _context13.stop();
               }
             }
-          }, _callee11, _this12);
+          }, _callee13, _this14);
         }));
 
-        return function (_x37) {
-          return _ref10.apply(this, arguments);
+        return function (_x41) {
+          return _ref12.apply(this, arguments);
         };
       }());
     }
@@ -35464,87 +35534,89 @@ module.exports = function () {
   }, {
     key: 'orderVotes',
     value: function orderVotes(votes) {
-      var _this13 = this;
+      var _this15 = this;
 
       var orderBy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : EasySteem.ORDER_OPTIONS.PAYOUT;
 
       return new Promise(function () {
-        var _ref12 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(resolve) {
-          return regeneratorRuntime.wrap(function _callee12$(_context12) {
+        var _ref14 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(resolve) {
+          return regeneratorRuntime.wrap(function _callee14$(_context14) {
             while (1) {
-              switch (_context12.prev = _context12.next) {
+              switch (_context14.prev = _context14.next) {
                 case 0:
-                  if (!(!_this13.steemProperties && orderBy === EasySteem.ORDER_OPTIONS.PAYOUT)) {
-                    _context12.next = 3;
+                  if (!(!_this15.steemProperties && orderBy === EasySteem.ORDER_OPTIONS.PAYOUT)) {
+                    _context14.next = 3;
                     break;
                   }
 
-                  _context12.next = 3;
-                  return _this13.refreshSteemProperties();
+                  _context14.next = 3;
+                  return _this15.refreshSteemProperties();
 
                 case 3:
                   if (!(votes.length > 1)) {
-                    _context12.next = 7;
+                    _context14.next = 7;
                     break;
                   }
 
                   votes.sort(function (a, b) {
                     switch (orderBy) {
                       case EasySteem.ORDER_OPTIONS.PAYOUT:
-                        var votePayoutA = _this13.sharesToSteem(a.rshares);
-                        a.votePayout = votePayoutA.toFixed(3);
-                        var votePayoutB = _this13.sharesToSteem(b.rshares);
-                        b.votePayout = votePayoutB.toFixed(3);
+                        var votePayoutA = _this15.sharesToSteem(a.rshares);
+                        a.payout = votePayoutA.toFixed(3);
+                        var votePayoutB = _this15.sharesToSteem(b.rshares);
+                        b.payout = votePayoutB.toFixed(3);
                         return votePayoutA > votePayoutB ? -1 : votePayoutA < votePayoutB ? 1 : 0;
 
                       case EasySteem.ORDER_OPTIONS.REPUTATION:
-                        var voteReputationA = _this13.calculateReputation(a.reputation);
-                        a.voteReputation = voteReputationA;
-                        var voteReputationB = _this13.calculateReputation(b.reputation);
-                        b.voteReputation = voteReputationB;
+                        var voteReputationA = _this15.calculateReputation(a.reputation);
+                        a.formattedReputation = voteReputationA;
+                        var voteReputationB = _this15.calculateReputation(b.reputation);
+                        b.formattedReputation = voteReputationB;
                         return voteReputationA > voteReputationB ? -1 : voteReputationA < voteReputationB ? 1 : 0;
 
                       case EasySteem.ORDER_OPTIONS.PERCENT:
                         var votePercentA = a.percent;
+                        a.formattedPercent = votePercentA / 100;
                         var votePercentB = b.percent;
+                        b.formattedPercent = votePercentB / 100;
                         return votePercentA > votePercentB ? -1 : votePercentA < votePercentB ? 1 : 0;
                     }
                   });
-                  _context12.next = 15;
+                  _context14.next = 15;
                   break;
 
                 case 7:
                   if (!(votes.length > 0)) {
-                    _context12.next = 15;
+                    _context14.next = 15;
                     break;
                   }
 
-                  _context12.t0 = orderBy;
-                  _context12.next = _context12.t0 === EasySteem.ORDER_OPTIONS.PAYOUT ? 11 : _context12.t0 === EasySteem.ORDER_OPTIONS.REPUTATION ? 13 : 15;
+                  _context14.t0 = orderBy;
+                  _context14.next = _context14.t0 === EasySteem.ORDER_OPTIONS.PAYOUT ? 11 : _context14.t0 === EasySteem.ORDER_OPTIONS.REPUTATION ? 13 : 15;
                   break;
 
                 case 11:
-                  votes[0].votePayout = _this13.sharesToSteem(votes[0].rshares).toFixed(3);
-                  return _context12.abrupt('break', 15);
+                  votes[0].votePayout = _this15.sharesToSteem(votes[0].rshares).toFixed(3);
+                  return _context14.abrupt('break', 15);
 
                 case 13:
-                  votes[0].voteReputation = _this13.calculateReputation(votes[0].reputation);
-                  return _context12.abrupt('break', 15);
+                  votes[0].voteReputation = _this15.calculateReputation(votes[0].reputation);
+                  return _context14.abrupt('break', 15);
 
                 case 15:
 
-                  resolve(votes);
+                  resolve();
 
                 case 16:
                 case 'end':
-                  return _context12.stop();
+                  return _context14.stop();
               }
             }
-          }, _callee12, _this13);
+          }, _callee14, _this15);
         }));
 
-        return function (_x40) {
-          return _ref12.apply(this, arguments);
+        return function (_x44) {
+          return _ref14.apply(this, arguments);
         };
       }());
     }
@@ -35559,27 +35631,27 @@ module.exports = function () {
   }, {
     key: 'orderComments',
     value: function orderComments(comments) {
-      var _this14 = this;
+      var _this16 = this;
 
       var orderBy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : EasySteem.ORDER_OPTIONS.PAYOUT;
 
       return new Promise(function () {
-        var _ref13 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(resolve) {
-          return regeneratorRuntime.wrap(function _callee13$(_context13) {
+        var _ref15 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15(resolve) {
+          return regeneratorRuntime.wrap(function _callee15$(_context15) {
             while (1) {
-              switch (_context13.prev = _context13.next) {
+              switch (_context15.prev = _context15.next) {
                 case 0:
-                  if (!(!_this14.steemProperties && orderBy === EasySteem.ORDER_OPTIONS.PAYOUT)) {
-                    _context13.next = 3;
+                  if (!(!_this16.steemProperties && orderBy === EasySteem.ORDER_OPTIONS.PAYOUT)) {
+                    _context15.next = 3;
                     break;
                   }
 
-                  _context13.next = 3;
-                  return _this14.refreshSteemProperties();
+                  _context15.next = 3;
+                  return _this16.refreshSteemProperties();
 
                 case 3:
                   if (!(comments.length > 1)) {
-                    _context13.next = 7;
+                    _context15.next = 7;
                     break;
                   }
 
@@ -35596,49 +35668,51 @@ module.exports = function () {
                         return a < b ? -1 : a > b ? 1 : 0;
 
                       case EasySteem.ORDER_OPTIONS.PAYOUT:
-                        a = _this14.parsePayoutAmount(a.pending_payout_value) === 0 ? _this14.parsePayoutAmount(a.total_payout_value) + _this14.parsePayoutAmount(a.curator_payout_value) : _this14.parsePayoutAmount(a.pending_payout_value);
-                        b = _this14.parsePayoutAmount(b.pending_payout_value) === 0 ? _this14.parsePayoutAmount(b.total_payout_value) + _this14.parsePayoutAmount(b.curator_payout_value) : _this14.parsePayoutAmount(b.pending_payout_value);
-                        return a > b ? -1 : a < b ? 1 : 0;
+                        var commentPayoutA = _this16.parsePayoutAmount(a.pending_payout_value) === 0 ? _this16.parsePayoutAmount(a.total_payout_value) + _this16.parsePayoutAmount(a.curator_payout_value) : _this16.parsePayoutAmount(a.pending_payout_value);
+                        a.formattedTotalPayout = commentPayoutA;
+                        var commentPayoutB = _this16.parsePayoutAmount(b.pending_payout_value) === 0 ? _this16.parsePayoutAmount(b.total_payout_value) + _this16.parsePayoutAmount(b.curator_payout_value) : _this16.parsePayoutAmount(b.pending_payout_value);
+                        b.formattedTotalPayout = commentPayoutB;
+                        return commentPayoutA > commentPayoutB ? -1 : commentPayoutA < commentPayoutB ? 1 : 0;
 
                       case EasySteem.ORDER_OPTIONS.REPUTATION:
-                        var commentReputationA = _this14.calculateReputation(a.author_reputation);
-                        a.commentReputation = commentReputationA;
-                        var commentReputationB = _this14.calculateReputation(b.author_reputation);
-                        b.commentReputation = commentReputationB;
+                        var commentReputationA = _this16.calculateReputation(a.author_reputation);
+                        a.formattedReputation = commentReputationA;
+                        var commentReputationB = _this16.calculateReputation(b.author_reputation);
+                        b.formattedReputation = commentReputationB;
                         return commentReputationA > commentReputationB ? -1 : commentReputationA < commentReputationB ? 1 : 0;
                     }
                   });
-                  _context13.next = 13;
+                  _context15.next = 13;
                   break;
 
                 case 7:
                   if (!(comments.length > 0)) {
-                    _context13.next = 13;
+                    _context15.next = 13;
                     break;
                   }
 
-                  _context13.t0 = orderBy;
-                  _context13.next = _context13.t0 === EasySteem.ORDER_OPTIONS.REPUTATION ? 11 : 13;
+                  _context15.t0 = orderBy;
+                  _context15.next = _context15.t0 === EasySteem.ORDER_OPTIONS.REPUTATION ? 11 : 13;
                   break;
 
                 case 11:
-                  comments[0].commentReputation = _this14.calculateReputation(comments[0].author_reputation);
-                  return _context13.abrupt('break', 13);
+                  comments[0].formattedReputation = _this16.calculateReputation(comments[0].author_reputation);
+                  return _context15.abrupt('break', 13);
 
                 case 13:
 
-                  resolve(comments);
+                  resolve();
 
                 case 14:
                 case 'end':
-                  return _context13.stop();
+                  return _context15.stop();
               }
             }
-          }, _callee13, _this14);
+          }, _callee15, _this16);
         }));
 
-        return function (_x42) {
-          return _ref13.apply(this, arguments);
+        return function (_x46) {
+          return _ref15.apply(this, arguments);
         };
       }());
     }

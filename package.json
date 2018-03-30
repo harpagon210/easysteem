@@ -23,15 +23,15 @@
     "babel-preset-env": "^1.6.1",
     "copy-webpack-plugin": "^4.4.1",
     "cross-env": "^5.0.1",
-    "docdash": "^0.4.0",
     "eslint": "^4.19.1",
     "eslint-config-standard": "^11.0.0-beta.0",
     "eslint-loader": "^1.9.0",
-    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-import": "^2.10.0",
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
     "jsdoc": "^3.5.5",
+    "tui-jsdoc-template": "^1.2.2",
     "webpack": "^3.11.0"
   },
   "dependencies": {

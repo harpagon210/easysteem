@@ -6,7 +6,7 @@ import secureRandom from 'secure-random'
 // babel-polyfill required for the async/wait
 import 'babel-polyfill' // eslint-disable-line no-unused-vars
 
-module.exports = class EasySteem {
+module.exports.EasySteem = class EasySteem {
   /**
    * initialize easysteem
    * @constructor
@@ -25,7 +25,7 @@ module.exports = class EasySteem {
   }
 
   /**
-   * reward options available on Steem
+   * reward options available on Steem: CENT_PERCENT_SP, FIFTY_PERCENT_SP_SBD or NONE
    */
   static get REWARD_OPTIONS () {
     return {
@@ -36,7 +36,7 @@ module.exports = class EasySteem {
   }
 
   /**
-   * order options
+   * order options: REPUTATION, PAYOUT, PERCENT, OLDEST, NEWEST
    */
   static get ORDER_OPTIONS () {
     return {
@@ -535,18 +535,30 @@ module.exports = class EasySteem {
    * get the active votes of a post or comment
    * @param {String} author author of the post or comment
    * @param {String} permlink permlink of the post or comment
+   * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but REPUTATION, PERCENT, PAYOUT available
+   * @returns {Array<JSON>} return the active votes of the post or comment ordered
    */
-  getActiveVotes (author, permlink) {
-    return this.steem.api.getActiveVotesAsync(author, permlink)
+  getActiveVotes (author, permlink, orderBy = EasySteem.ORDER_OPTIONS.PAYOUT) {
+    return new Promise(async resolve => {
+      let votes = await this.steem.api.getActiveVotesAsync(author, permlink)
+      await this.orderVotes(votes, orderBy)
+      resolve(votes)
+    })
   }
 
   /**
    * get the replies to a post or comment
    * @param {String} author author of the post or comment
    * @param {String} permlink permlink of the post or comment
+   * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but OLDEST, NEWEST, REPUTATION, PAYOUT available
+   * @returns {Array<JSON>} return the comments of the post or comment ordered
    */
-  getContentReplies (author, permlink) {
-    return this.steem.api.getContentRepliesAsync(author, permlink)
+  getContentReplies (author, permlink, orderBy = EasySteem.ORDER_OPTIONS.PAYOUT) {
+    return new Promise(async resolve => {
+      let comments = await this.steem.api.getContentRepliesAsync(author, permlink)
+      await this.orderComments(comments, orderBy)
+      resolve(comments)
+    })
   }
 
   /**
@@ -772,6 +784,24 @@ module.exports = class EasySteem {
    * @param {Number} numberDecimals number of decimals to return, default 2
    * @param {Boolean} refreshSteemProperties default true, refresh the Steem properties (Steem rate, etc...)
    * @returns {JSON} json with the bandwidth information (used, allocated in percents and bytes)
+   * @example
+   * easysteem.me()
+   *  .then(user => {
+   *    easysteem.calculateBandwidth(user.account, 3)
+   *      .then(result => console.log(result))
+   *  })
+   *  .catch(error => console.error(error.error, error.error_description))
+   *      /*{
+   *        bytes: {
+   *          allocated: "8.106 MB",
+   *          remaining: "8.088 MB",
+   *          used: "18.421 KB"
+   *        },
+   *        percents: {
+   *          remaining: "99.778",
+   *          used: "0.222"
+   *        }
+   *      }*\/
    */
   calculateBandwidth (user, numberDecimals = 2, refreshSteemProperties = true) {
     return new Promise(async resolve => {
@@ -813,6 +843,7 @@ module.exports = class EasySteem {
    * calculate the reputation in a more readable way
    * @param {JSON} user a user object
    * @param {*} numberDecimals number of decimals to return, default 2
+   * @returns {Number} return the calculated reputation
    */
   calculateReputation (rawReputation, numberDecimals = 2) {
     const isNegative = (rawReputation < 0)
@@ -886,7 +917,6 @@ module.exports = class EasySteem {
    * orders the votes
    * @param {Array<JSON>} votes array containing the votes
    * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but REPUTATION, PERCENT, PAYOUT available
-   * @returns {Array<JSON>} the input array ordered
    */
   orderVotes (votes, orderBy = EasySteem.ORDER_OPTIONS.PAYOUT) {
     return new Promise(async resolve => {
@@ -899,21 +929,23 @@ module.exports = class EasySteem {
           switch (orderBy) {
             case EasySteem.ORDER_OPTIONS.PAYOUT:
               let votePayoutA = this.sharesToSteem(a.rshares)
-              a.votePayout = votePayoutA.toFixed(3)
+              a.payout = votePayoutA.toFixed(3)
               let votePayoutB = this.sharesToSteem(b.rshares)
-              b.votePayout = votePayoutB.toFixed(3)
+              b.payout = votePayoutB.toFixed(3)
               return votePayoutA > votePayoutB ? -1 : votePayoutA < votePayoutB ? 1 : 0
 
             case EasySteem.ORDER_OPTIONS.REPUTATION:
               let voteReputationA = this.calculateReputation(a.reputation)
-              a.voteReputation = voteReputationA
+              a.formattedReputation = voteReputationA
               let voteReputationB = this.calculateReputation(b.reputation)
-              b.voteReputation = voteReputationB
+              b.formattedReputation = voteReputationB
               return voteReputationA > voteReputationB ? -1 : voteReputationA < voteReputationB ? 1 : 0
 
             case EasySteem.ORDER_OPTIONS.PERCENT:
               let votePercentA = a.percent
+              a.formattedPercent = votePercentA / 100
               let votePercentB = b.percent
+              b.formattedPercent = votePercentB / 100
               return votePercentA > votePercentB ? -1 : votePercentA < votePercentB ? 1 : 0
           }
         })
@@ -929,7 +961,7 @@ module.exports = class EasySteem {
         }
       }
 
-      resolve(votes)
+      resolve()
     })
   }
 
@@ -937,7 +969,6 @@ module.exports = class EasySteem {
    * orders the comments
    * @param {Array<JSON>} votes array containing the comments
    * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but OLDEST, NEWEST, REPUTATION, PAYOUT available
-   * @returns {Array<JSON>} the input array ordered
    */
   orderComments (comments, orderBy = EasySteem.ORDER_OPTIONS.PAYOUT) {
     return new Promise(async resolve => {
@@ -959,28 +990,30 @@ module.exports = class EasySteem {
               return a < b ? -1 : a > b ? 1 : 0
 
             case EasySteem.ORDER_OPTIONS.PAYOUT:
-              a = this.parsePayoutAmount(a.pending_payout_value) === 0 ? this.parsePayoutAmount(a.total_payout_value) + this.parsePayoutAmount(a.curator_payout_value) : this.parsePayoutAmount(a.pending_payout_value)
-              b = this.parsePayoutAmount(b.pending_payout_value) === 0 ? this.parsePayoutAmount(b.total_payout_value) + this.parsePayoutAmount(b.curator_payout_value) : this.parsePayoutAmount(b.pending_payout_value)
-              return a > b ? -1 : a < b ? 1 : 0
+              let commentPayoutA = this.parsePayoutAmount(a.pending_payout_value) === 0 ? this.parsePayoutAmount(a.total_payout_value) + this.parsePayoutAmount(a.curator_payout_value) : this.parsePayoutAmount(a.pending_payout_value)
+              a.formattedTotalPayout = commentPayoutA
+              let commentPayoutB = this.parsePayoutAmount(b.pending_payout_value) === 0 ? this.parsePayoutAmount(b.total_payout_value) + this.parsePayoutAmount(b.curator_payout_value) : this.parsePayoutAmount(b.pending_payout_value)
+              b.formattedTotalPayout = commentPayoutB
+              return commentPayoutA > commentPayoutB ? -1 : commentPayoutA < commentPayoutB ? 1 : 0
 
             case EasySteem.ORDER_OPTIONS.REPUTATION:
               let commentReputationA = this.calculateReputation(a.author_reputation)
-              a.commentReputation = commentReputationA
+              a.formattedReputation = commentReputationA
               let commentReputationB = this.calculateReputation(b.author_reputation)
-              b.commentReputation = commentReputationB
+              b.formattedReputation = commentReputationB
               return commentReputationA > commentReputationB ? -1 : commentReputationA < commentReputationB ? 1 : 0
           }
         })
       } else if (comments.length > 0) {
         switch (orderBy) {
           case EasySteem.ORDER_OPTIONS.REPUTATION:
-            comments[0].commentReputation = this.calculateReputation(comments[0].author_reputation)
+            comments[0].formattedReputation = this.calculateReputation(comments[0].author_reputation)
             break
           default:
         }
       }
 
-      resolve(comments)
+      resolve()
     })
   }
 

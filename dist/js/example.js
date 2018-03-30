@@ -15,13 +15,15 @@ var testMethods = [
   // 'deletePostOrComment',
   // 'getFollowers',
   // 'getFollowing'
+  'getActiveVotes',
   // 'calculateVotingPower',
   // 'calculateUserVestingShares',
+  'calculatePayout',
   'calculateVoteValue',
   'calculateEstimatedAccountValue',
   'calculateBandwidth',
   'calculateReputation',
-  'orderVotes',
+  // 'orderVotes',
   'orderComments'
 ]
 
@@ -175,7 +177,7 @@ if (testMethods.indexOf('calculateBandwidth') !== -1) {
     .catch(error => console.error(error.error, error.error_description))
 }
 
-if (testMethods.indexOf('calculateVoteValue') !== -1) {
+if (testMethods.indexOf('calculateReputation') !== -1) {
   easysteem.me()
     .then(user => {
       console.log(easysteem.calculateReputation(user.account.reputation))
@@ -192,6 +194,20 @@ if (testMethods.indexOf('calculateVoteValue') !== -1) {
     .catch(error => console.error(error.error, error.error_description))
 }
 
+if (testMethods.indexOf('calculatePayout') !== -1) {
+  easysteem.getContent('harpagon', 'easysteem-la-librairie-javascript-qui-va-vous-simplifier-la-vie')
+    .then(postContent => {
+      console.log(easysteem.calculatePayout(postContent))
+    })
+    .catch(error => console.error(error.error, error.error_description))
+
+  easysteem.getContent('crypt0', 'the-legendary-trace-mayer-a-cold-bitcoin-winter-will-mean-a-fruitful-spring-moon')
+    .then(postContent => {
+      console.log(easysteem.calculatePayout(postContent))
+    })
+    .catch(error => console.error(error.error, error.error_description))
+}
+
 if (testMethods.indexOf('calculateEstimatedAccountValue') !== -1) {
   easysteem.me()
     .then(user => {
@@ -201,20 +217,29 @@ if (testMethods.indexOf('calculateEstimatedAccountValue') !== -1) {
     .catch(error => console.error(error.error, error.error_description))
 }
 
+if (testMethods.indexOf('getActiveVotes') !== -1) {
+  easysteem.getActiveVotes(
+    'harpagon',
+    'easysteem-a-library-that-makes-steem-javascript-developments-easy',
+    EasySteem.ORDER_OPTIONS.PAYOUT)
+    .then(votes => console.log(votes))
+    .catch(error => console.error(error.error, error.error_description))
+}
+
 if (testMethods.indexOf('orderVotes') !== -1) {
   easysteem.getContent('harpagon', 'easysteem-a-library-that-makes-steem-javascript-developments-easy')
     .then(postContent => {
       easysteem.orderVotes(postContent.active_votes, EasySteem.ORDER_OPTIONS.REPUTATION)
-        .then(result => console.log(result))
+        .then(() => console.log(postContent.active_votes))
     })
     .catch(error => console.error(error.error, error.error_description))
 }
 
 if (testMethods.indexOf('orderComments') !== -1) {
-  easysteem.getContentReplies('harpagon', 'easysteem-la-librairie-javascript-qui-va-vous-simplifier-la-vie')
-    .then(postContentReplies => {
-      easysteem.orderComments(postContentReplies, EasySteem.ORDER_OPTIONS.REPUTATION)
-        .then(result => console.log(result))
-    })
+  easysteem.getContentReplies(
+    'harpagon',
+    'easysteem-la-librairie-javascript-qui-va-vous-simplifier-la-vie',
+    EasySteem.ORDER_OPTIONS.REPUTATION)
+    .then((postContentReplies) => console.log(postContentReplies))
     .catch(error => console.error(error.error, error.error_description))
 }
