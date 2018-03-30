@@ -5,7 +5,7 @@ steemapi: https://github.com/steemit/steem-js and steemconnect v2: https://githu
 
 some piece of code are extracted from steemit.com (https://github.com/steemit/condenser) and busy.org ( https://github.com/busyorg/busy) open source codes
 
-- cdn available: https://cdn.jsdelivr.net/gh/harpagon210/easysteem@1.0/dist/js/easysteem.min.js
+- cdn available: https://cdn.jsdelivr.net/gh/harpagon210/easysteem@1.1/dist/js/easysteem.min.js
 - live doc: https://harpagon210.github.io/easysteem/index.html
 
 # Installation
