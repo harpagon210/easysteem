@@ -34137,7 +34137,7 @@ module.exports = function () {
   }
 
   /**
-   * reward options available on Steem
+   * reward options available on Steem: CENT_PERCENT_SP, FIFTY_PERCENT_SP_SBD or NONE
    */
 
 
@@ -34992,7 +34992,7 @@ module.exports = function () {
      * @param {String} author author of the post or comment
      * @param {String} permlink permlink of the post or comment
      * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but OLDEST, NEWEST, REPUTATION, PAYOUT available
-     * @returns {Array<JSON>} return the commments of the post or comment ordered
+     * @returns {Array<JSON>} return the comments of the post or comment ordered
      */
 
   }, {
@@ -35312,6 +35312,24 @@ module.exports = function () {
      * @param {Number} numberDecimals number of decimals to return, default 2
      * @param {Boolean} refreshSteemProperties default true, refresh the Steem properties (Steem rate, etc...)
      * @returns {JSON} json with the bandwidth information (used, allocated in percents and bytes)
+     * @example
+     * easysteem.me()
+     *  .then(user => {
+     *    easysteem.calculateBandwidth(user.account, 3)
+     *      .then(result => console.log(result))
+     *  })
+     *  .catch(error => console.error(error.error, error.error_description))
+     *      /*{
+     *        bytes: {
+     *          allocated: "8.106 MB",
+     *          remaining: "8.088 MB",
+     *          used: "18.421 KB"
+     *        },
+     *        percents: {
+     *          remaining: "99.778",
+     *          used: "0.222"
+     *        }
+     *      }*\/
      */
 
   }, {
@@ -35384,6 +35402,7 @@ module.exports = function () {
      * calculate the reputation in a more readable way
      * @param {JSON} user a user object
      * @param {*} numberDecimals number of decimals to return, default 2
+     * @returns {Number} return the calculated reputation
      */
 
   }, {
@@ -35528,7 +35547,6 @@ module.exports = function () {
      * orders the votes
      * @param {Array<JSON>} votes array containing the votes
      * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but REPUTATION, PERCENT, PAYOUT available
-     * @returns {Array<JSON>} the input array ordered
      */
 
   }, {
@@ -35625,7 +35643,6 @@ module.exports = function () {
      * orders the comments
      * @param {Array<JSON>} votes array containing the comments
      * @param {String} orderBy default EasySteem.ORDER_OPTIONS.PAYOUT but OLDEST, NEWEST, REPUTATION, PAYOUT available
-     * @returns {Array<JSON>} the input array ordered
      */
 
   }, {
@@ -35756,7 +35773,7 @@ module.exports = function () {
     }
 
     /**
-     * order options
+     * order options: REPUTATION, PAYOUT, PERCENT, OLDEST, NEWEST
      */
 
   }, {

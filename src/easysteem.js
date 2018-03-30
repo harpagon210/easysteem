@@ -6,7 +6,7 @@ import secureRandom from 'secure-random'
 // babel-polyfill required for the async/wait
 import 'babel-polyfill' // eslint-disable-line no-unused-vars
 
-module.exports.EasySteem = class EasySteem {
+module.exports = class EasySteem {
   /**
    * initialize easysteem
    * @constructor
